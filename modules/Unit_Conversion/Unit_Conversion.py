@@ -43,7 +43,6 @@ class Unit_Conversion(commands.Cog):
         quants = parser.parse(message.content)
         channel = message.channel
 
-        # embed=discord.Embed(title="Unit Conversions")
         embed=discord.Embed(title=" ")
 
         for q in quants:
@@ -61,10 +60,14 @@ class Unit_Conversion(commands.Cog):
                     output_unit = conversion[1]
 
                     ouput_string = f"{q.value} {q.unit} = {result:.2f} {output_unit}"
+
                     embed.add_field(name="Conversion:", value=ouput_string, inline=False)
 
-        if len(embed.fields) > 0 and await bot_utils.await_react_confirm(message, self.bot, emoji='📝'):
-            await message.channel.send(embed=embed)
+        if len(embed.fields) > 0:
+            send_embed, user = await bot_utils.await_react_confirm(message, self.bot, emoji='📝')
+            if send_embed:
+                embed.set_footer(text=f"Conversion Requested By: {user}")
+                await message.channel.send(embed=embed)
 
     @commands.command()
     async def convert(self, ctx, string):
@@ -87,9 +90,28 @@ class Unit_Conversion(commands.Cog):
             await ctx.send(embed=embed)
 
 
-    async def generate_output(self, string, channel):
-        embed=discord.Embed(title=string)
-        await channel.send(embed=embed)
+    async def generate_output_embed(self, quants):
+        embed=discord.Embed(title=" ")
+
+        for q in quants:
+            for conversion in self.measures:
+
+                if str(q.unit) == conversion[0]:
+
+                    if str(q.unit) == "degree fahrenheit":
+                        result = (q.value + conversion[3]) * conversion[2]
+                    elif str(q.unit) == "degree celsius":
+                        result = (q.value * conversion[2]) + conversion[3]
+                    else:
+                        result = q.value * conversion[2]
+
+                    output_unit = conversion[1]
+
+                    ouput_string = f"{q.value} {q.unit} = {result:.2f} {output_unit}"
+
+                    embed.add_field(name="Conversion:", value=ouput_string, inline=False)
+
+        return embed
 
 def setup(bot):
     bot.add_cog(Unit_Conversion(bot))
