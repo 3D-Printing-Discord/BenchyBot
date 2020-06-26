@@ -1,0 +1,11 @@
+{
+    "help_channels": [700121596987179091, 700121607619739718, 700121616486629447, 708068535292919868, 708068557979648071, 708068562727600228],
+    "timeout": 0,
+    "channel_name": "<emoji>｜help-<number>-<status>",
+    "available_message": "This help channel is now **available**, which means that you can claim it by simply typing your question into it. Once claimed, the channel will be yours until it has been inactive for 10 seconds. When that happens it will be made available again for another user.\n\nTry to write the best question you can by providing a detailed description and telling us what you've tried already.",
+    "closed_message": "This help channel is now **closed**. It will become available for a new help topic soon.",
+    "direct_message": "**You have been allocated a help channel.**\n\nThis channel is now yours until it has been innactive for **10 mins**. If your question isn't answered before the channel times out feel free to claim another available channel.\n\nIf your question is resolved **please release the channel by sending the `!solved` command.** This will allow someone else to use the channel.",
+    "multiple_message": "You may only claim one help channel at a time. If you are done with your other channel you can close it with `!solved`.",
+    "offline_message": "The bot is offline. Help channels will not be allocated. You may still use the help channels.",
+    "pin_messages": "True"
+}

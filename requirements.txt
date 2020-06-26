@@ -1,0 +1,5 @@
+discord.py
+discord-flags
+matplotlib
+sklearn
+quantulum3

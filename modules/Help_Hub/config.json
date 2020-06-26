@@ -1,0 +1,8 @@
+{
+    "help_hub": 686177877829746787,
+    "help_channels": [686701126132826146, 686701142846996530, 686701157212618806, 686701178440253453, 711295635768475880, 711295654336659577],
+    "timeout": 600,
+    "channel_name": "<emoji>｜Help-<number>-<status>",
+    "closed_message": "This channel is now closed. If you have a question you can open a new help channel by posting in the help-hub.",
+    "wrong_channel_message": "Use this command in the help-hub to get help!"
+}

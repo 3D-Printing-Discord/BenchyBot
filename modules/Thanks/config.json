@@ -1,0 +1,5 @@
+{
+    "check_message": "Thanks for making the server a great place!",
+    "check_message_none": "Thanks are awarded for when you help people out!",
+    "thanks_detected": "Looks like you might be thanking someone. You can record your thanks by reacting with the :thanks: emoji to their message!"
+}

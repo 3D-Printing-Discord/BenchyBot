@@ -1,0 +1,22 @@
+# Ignore Mac system files
+.DS_store
+
+# Ignore the token file
+token.txt
+
+# Ignore Venv folder for virtual enviroments
+venv/*
+!.gitkeep
+
+# Ignore pycache
+__pycache__
+
+# Ignore custom database
+database.db
+
+#ignore cpython
+*.cpython*
+
+# Ignore runtimefiles folder
+runtimefiles/*
+!.gitkeep
