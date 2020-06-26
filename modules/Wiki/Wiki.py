@@ -74,7 +74,7 @@ class Wiki(commands.Cog):
 
             embed=discord.Embed(title=found_page.replace("-", " "), colour=bot_utils.blue)
             embed.add_field(name="Intro", value=breif.strip(), inline=False)
-            embed.add_field(name="Source", value=f"https://github.com/3DprinterDiscord/wiki/wiki/{found_page}", inline=False)
+            embed.add_field(name="Continue Reading...", value=f"https://github.com/3DprinterDiscord/wiki/wiki/{found_page}", inline=False)
             await ctx.send(embed=embed)
 
             # await ctx.send(f"Intro:\n```\n{breif.strip()}\n```Source: https://github.com/3DprinterDiscord/wiki/{found_page}")
