@@ -29,7 +29,7 @@ class User_Management(commands.Cog):
         # ADD SOME STUFF HERE 
 
     @commands.Cog.listener()
-    async def on_member_remove(member):
+    async def on_member_remove(self, member):
         # get channel membership_channel
         print(member)
         # send left message
