@@ -7,7 +7,7 @@ This bot takes a config file to set key parameters.
 ### Example Config
 ```
 {
-    "description": "Ed's Bot",
+    "description": "BenchyBot",
     "log_level": "FULL",
     "prefix": "!",
     "modules": ["Blacklist", "Bot_Management", "CommandsDB", "DM", "Dynamic_Help", "Help_Hub", "ReactRoles", "Report", "Showcase", "Thanks"],
