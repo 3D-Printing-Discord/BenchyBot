@@ -10,6 +10,9 @@ yellow = 0xffcc00
 green = 0x66cc00
 purple = 0x330099
 
+admin_roles = [167872530860867586, 167872106644635648]
+reg_roles = [260945795744792578] + admin_roles
+
 # ---------- FUNCTIONS ----------
 
 async def is_admin(ctx):
@@ -46,7 +49,7 @@ async def is_bot_channel(ctx):
     for channel in channel_list:
         if channel == used_channel:
             return True
-    await ctx.send("Try this in a bot channel")
+    # await ctx.send("Try this in a bot channel")
     return False
 
 async def is_secret_channel(ctx):
