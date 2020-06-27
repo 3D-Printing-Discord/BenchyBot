@@ -82,7 +82,7 @@ class CommandsDB(commands.Cog):
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
-    @commands.check(bot_utils.is_mod)
+    @commands.has_any_role(*bot_utils.reg_roles)
     async def hc(self, ctx, command=None, *, response=None):
         '''
         Used to create / delete help commands.
@@ -100,7 +100,7 @@ class CommandsDB(commands.Cog):
     
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def cc(self, ctx, command=None, *, response=None):
         '''
         Used to create / delete custom commands.
@@ -118,7 +118,7 @@ class CommandsDB(commands.Cog):
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.reg_roles)
     async def alias(self, ctx, alias=None, command=None):
         '''
         Used to manage command aliasing.
@@ -130,7 +130,7 @@ class CommandsDB(commands.Cog):
             self.c.execute("SELECT * FROM Commands WHERE command_type='alias'")
             result = self.c.fetchall()
             
-            # result.sort(key=lambda x: x[0])
+            result.sort(key=lambda x: x[0])
 
             # CREATE PAGINATOR
             paginator = commands.Paginator(prefix='```\n', suffix='\n```')
@@ -182,7 +182,7 @@ class CommandsDB(commands.Cog):
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def db_csv(self,ctx):
         '''
         Exports a CSV of the commands database.
@@ -204,7 +204,7 @@ class CommandsDB(commands.Cog):
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def legacy_import(self, ctx):
         '''
         Imports legacy database data.
