@@ -12,85 +12,38 @@ class Poll(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        self.messages = {}
+
     @commands.command()
-    @commands.check(bot_utils.is_mod)
     async def poll(self, ctx, *, topic):
+
         result = self.build_result(0,0,0)
-        sent_message = await ctx.send(f"**{topic}**\n{result}")
+        sent_message = await ctx.send(f"**{topic}**\n{result}" )
 
         await sent_message.add_reaction('👍')
         await sent_message.add_reaction('👎')
         await sent_message.add_reaction('🤷‍♀️')
 
-        # DEF CHECK FOR RESPONSE
-        def check(reaction, user):    
-            return user != self.bot.user and reaction.message.id == sent_message.id
+        self.messages[int(sent_message.id)] = topic
 
-        yes = 0
-        no = 0 
-        maybe = 0
+        await asyncio.sleep(24*60*60)
 
-        voted = []
-        cont = True
-        while cont:
-            # AWAIT AND HANDLE RESPONSE
+        del self.messages[sent_message.id]
 
-            # try:
-            #     done, pending = await asyncio.wait([
-            #         self.bot.wait_for('reaction_remove', timeout=60, check=check),
-            #         self.bot.wait_for('reaction_add', timeout=60, check=check)
-            #     ], return_when=asyncio.FIRST_COMPLETED)
-                
-            #     print("Runnning Update")
+        await sent_message.clear_reactions()
+        await sent_message.edit(content=f"**{topic}**\n{result}`CLOSED`")
 
-            #     # refetch message
-            #     sent_message = await sent_message.channel.fetch_message(sent_message.id)
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
 
-            #     print(sent_message.reactions)
+        if reaction.message.id in self.messages:
+            await self.update_message(reaction.message, self.messages[reaction.message.id])
 
-            #     yes_count = [f for f in sent_message.reactions if str(f.emoji) == "👍"]
-            #     print(f"YESSES: {len(yes_count)}")
-            #     no_count = [f for f in sent_message.reactions if str(f.emoji) == "👎"]
-            #     maybe_count = [f for f in sent_message.reactions if str(f.emoji) == "🤷‍♀️"]
+    @commands.Cog.listener()
+    async def on_reaction_remove(self, reaction, user):
 
-            #     result = self.build_result(len(yes_count)-1, len(no_count)-1, len(maybe_count)-1)
-
-            #     await sent_message.edit(content=f"**{topic}**\n{result}")
-
-    
-            # except asyncio.TimeoutError:
-            #     await sent_message.clear_reactions()
-            #     await sent_message.edit(content=f"**{topic}**\n{result}`CLOSED`")
-            #     cont = False 
-
-            # for future in pending:
-            #     future.cancel()  # we don't need these anymore
-            
-
-            try:
-                reaction, user = await self.bot.wait_for('reaction_add', timeout=86400, check=check)
-
-                if user in voted:
-                    continue
-
-                if str(reaction) == "👍":
-                    yes = yes + 1 
-                elif str(reaction) == "👎":
-                    no = no + 1
-                elif str(reaction) == "🤷‍♀️":
-                    maybe = maybe + 1
-                else:
-                    continue
-
-                voted.append(user)
-                result = self.build_result(yes, no, maybe)
-
-                await sent_message.edit(content=f"**{topic}**\n{result}")
-
-            except asyncio.TimeoutError:
-                await sent_message.clear_reactions()
-                await sent_message.edit(content=f"**{topic}**\n{result}`CLOSED`")
-                cont = False 
+        if reaction.message.id in self.messages:
+            await self.update_message(reaction.message, self.messages[reaction.message.id])
 
     def build_result(self, yes, no, maybe):
         total_answers = yes + no + maybe
@@ -112,6 +65,19 @@ class Poll(commands.Cog):
         result = f"```\n👍|{self.build_percent_string(yes_per)}%| {yes_bar}\n👎|{self.build_percent_string(no_per)}%| {no_bar}\n🤷‍♀️|{self.build_percent_string(maybe_per)}%| {maybe_bar}\nTotal Replies: {total_answers}```"
 
         return result
+
+    async def update_message(self, message, topic):
+        r = {}
+        for react in message.reactions:
+            r[react.emoji] = react.count
+
+        yes_count   = r['👍'] - 1
+        no_count    = r['👎'] - 1
+        maybe_count = r['🤷‍♀️'] - 1
+
+        result = self.build_result(yes_count, no_count, maybe_count)
+
+        await message.edit(content=f"**TEST**\n{result}")
 
     def build_percent_string(self, percent):
         output = str(round(percent*100))
