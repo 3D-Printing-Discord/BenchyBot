@@ -6,6 +6,8 @@ import math
 import bot_utils
 import asyncio
 
+DEBUG = False
+
 class Poll(commands.Cog):
     version = "v0.1"
 
@@ -26,24 +28,32 @@ class Poll(commands.Cog):
 
         self.messages[int(sent_message.id)] = topic
 
-        await asyncio.sleep(24*60*60)
-
+        if DEBUG: print("Going to sleep")
+        await asyncio.sleep(12*60*60)
+        if DEBUG: print("Woken Up")
+    
         del self.messages[sent_message.id]
 
         await sent_message.clear_reactions()
         await sent_message.edit(content=f"**{topic}**\n{result}`CLOSED`")
 
     @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
-
-        if reaction.message.id in self.messages:
-            await self.update_message(reaction.message, self.messages[reaction.message.id])
+    async def on_raw_reaction_remove(self, RawReactionActionEvent):
+        if DEBUG: print("on_raw_reaction_remove")
+        if RawReactionActionEvent.message_id in self.messages:
+            fetched_channel = self.bot.get_channel(RawReactionActionEvent.channel_id)
+            fetched_message = await fetched_channel.fetch_message(RawReactionActionEvent.message_id)
+            if DEBUG: print("-- Poll Message")
+            await self.update_message(fetched_message, self.messages[RawReactionActionEvent.message_id])
 
     @commands.Cog.listener()
-    async def on_reaction_remove(self, reaction, user):
-
-        if reaction.message.id in self.messages:
-            await self.update_message(reaction.message, self.messages[reaction.message.id])
+    async def on_raw_reaction_add(self, RawReactionActionEvent):
+        if DEBUG: print("on_raw_reaction_add")
+        if RawReactionActionEvent.message_id in self.messages:
+            fetched_channel = self.bot.get_channel(RawReactionActionEvent.channel_id)
+            fetched_message = await fetched_channel.fetch_message(RawReactionActionEvent.message_id)
+            if DEBUG: print("-- Poll Message")
+            await self.update_message(fetched_message, self.messages[RawReactionActionEvent.message_id])
 
     def build_result(self, yes, no, maybe):
         total_answers = yes + no + maybe
@@ -67,6 +77,7 @@ class Poll(commands.Cog):
         return result
 
     async def update_message(self, message, topic):
+        if DEBUG: print("-- Update Message")
         r = {}
         for react in message.reactions:
             r[react.emoji] = react.count
