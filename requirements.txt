@@ -3,4 +3,4 @@ discord-flags
 matplotlib
 sklearn
 quantulum3
-gitpython
+PyGithub
