@@ -6,6 +6,7 @@ import os
 import bot_utils
 import shutil
 import git
+from github import Github
 
 class Wiki(commands.Cog):
     version = "v0.1"
@@ -18,6 +19,20 @@ class Wiki(commands.Cog):
             self.config_data = json.load(f)
 
         self.background_repo_update.start()
+
+        # LOAD ACCESS TOKEN
+        try:
+            token = open("modules/Wiki/token.txt", "r").read()
+            print(f"   [✓] Github Token Read: {token}")
+        except:
+            print("    [✘] Token Read Failed. Please create token.txt in the Wiki module with your personal access token.")
+            exit()
+
+        self.g = Github(token)
+        self.test_repo = self.g.get_repo('3DprinterDiscord/wiki')
+
+        self.conn = sqlite3.connect(self.bot.config['database'])
+        self.c = self.conn.cursor()
 
     @tasks.loop(hours=6)
     async def background_repo_update(self):
@@ -32,6 +47,45 @@ class Wiki(commands.Cog):
 
         print("[!] Wiki Update Complete")
 
+    @commands.command(enabled=False)
+    @commands.has_any_role(*bot_utils.reg_roles)
+    async def add_wiki_access(self, ctx, username=None):
+        '''
+        Adds a github account as a collaborator to the wiki so that you can edit pages.
+        '''
+
+        if username==None:
+            await ctx.send(f"Please use the format: `{self.bot.config['prefix']}add_wiki_access [github username]`")
+
+        try:
+            self.test_repo.add_to_collaborators(username)
+            await ctx.send("Done!")
+        except:
+            await ctx.send("Failed! Make sure you are using your github username and it is spelt correctly.")
+            return
+
+        self.c.execute("INSERT INTO Wiki (discord_name, github_name) VALUES (?, ?)", (str(ctx.author), username))
+        self.conn.commit()
+
+    @commands.command(enabled=False)
+    @commands.has_any_role(*bot_utils.reg_roles)
+    async def wiki_who(self, ctx, username=None):
+        # GET DATABASE RESULTS
+        self.c.execute("SELECT * FROM Wiki")
+        result = self.c.fetchall()
+
+        # CREATE PAGINATOR
+        paginator = commands.Paginator(prefix='```\n', suffix='\n```')
+        paginator.add_line(f'--- WIKI USERNAMES ({len(result)}) ---')
+
+        # ADD COMMANDS TO PAGINATOR
+        for command in result:
+            paginator.add_line(f"{command[0]} : {command[1]}")
+
+        # SEND PAGINATOR
+        for page in paginator.pages:
+            await ctx.send(page, delete_after=60)
+        
     @commands.command()
     @commands.check(bot_utils.is_admin)
     async def update_local_database(self, ctx):
