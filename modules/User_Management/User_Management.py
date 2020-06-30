@@ -45,7 +45,7 @@ class User_Management(commands.Cog):
         await channel_object.send(embed=embed)
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def membership_info(self, ctx):
         '''
         Gets info on the server membership.
@@ -127,7 +127,7 @@ class User_Management(commands.Cog):
             await ctx.send(file=loaded_file_2)
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def user_info(self, ctx, username):
         '''
         Gets info on a user
