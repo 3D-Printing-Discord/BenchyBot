@@ -134,7 +134,7 @@ class ReactRoles(commands.Cog):
     @flags.add_flag("--text", default="Pick your roles by reacting with the following emoji.")
     @flags.add_flag("--roles", default=None)
     @flags.add_flag("--reacts", default="🔴 🟠 🟡 🟢 🔵 🟣 🟤 🟥 🟧 🟨 🟩 🟦 🟪 🔶 🔷")
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     @flags.command()
     async def create_reaction_roles_widget(self, ctx, **flags):
         '''
