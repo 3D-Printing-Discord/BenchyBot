@@ -31,10 +31,11 @@ class Blacklist(commands.Cog):
                     if self.config_data["blacklist_message"] != "":
                         await message.author.send(self.config_data["blacklist_message"])
 
-                    await bot_utils.bot_log(self.bot, f"'Message removed: '{message.content}' by {message.author}")
+                    embed=discord.Embed(title="Blacklist Message Removed", description=f"```Message: '{message.content}'\n     By: {message.author}\n     In: {message.channel}", color=bot_utils.red)
+                    await self.bot.get_channel(self.config_data['report_channel']).send(embed=embed)
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def add_banned_term(self, ctx, term):
         """Adds blacklisted terms to the database"""
         term = term.lower()
@@ -50,7 +51,7 @@ class Blacklist(commands.Cog):
             await ctx.send(f"'{term}' failed to add to blacklist!")
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def remove_banned_term(self, ctx, term):
         """Adds blacklisted terms to the database"""
         print(f"[!] Removing {term} from databse!")
@@ -64,7 +65,7 @@ class Blacklist(commands.Cog):
             await ctx.send(f"'{term}' failed to remove from blacklist!")
 
     @commands.command(hidden=True)
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def view_banned_terms(self, ctx):
         self.c.execute(f"SELECT * FROM Blacklist")
         banned_terms = self.c.fetchall()
