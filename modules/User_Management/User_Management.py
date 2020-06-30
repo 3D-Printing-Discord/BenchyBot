@@ -25,14 +25,24 @@ class User_Management(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        print(member)
-        # ADD SOME STUFF HERE 
+
+        time_delta = datetime.datetime.utcnow() - member.created_at
+
+        channel_object = self.bot.get_channel(self.config_data['membership_channel'])
+
+        if time_delta.days < 1:
+            embed=discord.Embed(title="New Member", description=f"{member.mention} [New Discord User]", color=bot_utils.green)
+        else:
+            embed=discord.Embed(title="New Member", description=member.mention, color=bot_utils.green)
+
+        await channel_object.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        # get channel membership_channel
-        print(member)
-        # send left message
+        channel_object = self.bot.get_channel(self.config_data['membership_channel'])
+        
+        embed=discord.Embed(title="Member Left", description=member.mention, color=bot_utils.red)
+        await channel_object.send(embed=embed)
 
     @commands.command()
     @commands.check(bot_utils.is_admin)
