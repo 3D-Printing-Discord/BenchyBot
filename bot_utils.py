@@ -129,7 +129,7 @@ async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60
 
     # DEF CHECK FOR RESPONSE
     def check(reaction, user):
-        return str(reaction.emoji) == emoji and user != bot.user
+        return str(reaction.emoji) == emoji and user != bot.user and confirm_message.id == reaction.message.id
 
     # AWAIT AND HANDLE RESPONSE
     try:
