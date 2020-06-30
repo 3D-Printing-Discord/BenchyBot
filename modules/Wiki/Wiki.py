@@ -48,7 +48,7 @@ class Wiki(commands.Cog):
 
         print("[!] Wiki Update Complete")
 
-    @commands.command(enabled=False)
+    @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
     async def add_wiki_access(self, ctx, username=None):
         '''
@@ -68,7 +68,7 @@ class Wiki(commands.Cog):
         self.c.execute("INSERT INTO Wiki (discord_name, github_name) VALUES (?, ?)", (str(ctx.author), username))
         self.conn.commit()
 
-    @commands.command(enabled=False)
+    @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
     async def wiki_who(self, ctx, username=None):
         # GET DATABASE RESULTS
