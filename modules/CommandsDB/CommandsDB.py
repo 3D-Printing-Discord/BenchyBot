@@ -194,7 +194,7 @@ class CommandsDB(commands.Cog):
         with open('runtimefiles/Database-CSV.csv', 'w') as csvfile:
             ouput_writer = csv.writer(csvfile, delimiter=',', quotechar='"')
 
-            ouput_writer.writerow(['command', 'response', 'alias', 'redirect', 'command_type'])
+            ouput_writer.writerow(['command', 'response', 'command_type'])
 
             for command in result:
                 ouput_writer.writerow(command)
