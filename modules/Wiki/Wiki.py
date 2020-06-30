@@ -7,6 +7,7 @@ import bot_utils
 import shutil
 import git
 from github import Github
+import sqlite3
 
 class Wiki(commands.Cog):
     version = "v0.1"
