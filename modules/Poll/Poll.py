@@ -16,6 +16,8 @@ class Poll(commands.Cog):
 
         self.messages = {}
 
+        # self.reacts_list = ['👍', '👎', '🤷‍♀️']
+
     @commands.command()
     async def poll(self, ctx, *, topic):
 
@@ -48,11 +50,21 @@ class Poll(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, RawReactionActionEvent):
+        if RawReactionActionEvent.user_id == self.bot.user.id:
+            return
+
         if DEBUG: print("on_raw_reaction_add")
         if RawReactionActionEvent.message_id in self.messages:
             fetched_channel = self.bot.get_channel(RawReactionActionEvent.channel_id)
             fetched_message = await fetched_channel.fetch_message(RawReactionActionEvent.message_id)
+            react_user = self.bot.get_user(RawReactionActionEvent.user_id)
             if DEBUG: print("-- Poll Message")
+
+            reacts_to_remove = ['👍', '👎', '🤷‍♀️']
+            reacts_to_remove.remove(str(RawReactionActionEvent.emoji))
+            for r in reacts_to_remove:
+                await fetched_message.remove_reaction(r, react_user)
+
             await self.update_message(fetched_message, self.messages[RawReactionActionEvent.message_id])
 
     def build_result(self, yes, no, maybe):
@@ -80,11 +92,16 @@ class Poll(commands.Cog):
         if DEBUG: print("-- Update Message")
         r = {}
         for react in message.reactions:
-            r[react.emoji] = react.count
+            r[react.emoji] = [u.id for u in await react.users().flatten()]
+            # r[react.emoji] = react.count
 
-        yes_count   = r['👍'] - 1
-        no_count    = r['👎'] - 1
-        maybe_count = r['🤷‍♀️'] - 1
+        yes_count   = len(set(r['👍']) - set(r['👎']) - set(r['🤷‍♀️']))
+        no_count    = len(set(r['👎']) - set(r['🤷‍♀️']) - set(r['👍']))
+        maybe_count = len(set(r['🤷‍♀️']) - set(r['👍']) - set(r['👎']))
+
+        # yes_count   = r['👍'] - 1
+        # no_count    = r['👎'] - 1
+        # maybe_count = r['🤷‍♀️'] - 1
 
         result = self.build_result(yes_count, no_count, maybe_count)
 
