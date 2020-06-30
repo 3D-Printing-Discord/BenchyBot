@@ -19,6 +19,9 @@ class Bot_Management(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(bot_utils.is_admin)
     async def info(self, ctx):
+        '''
+        Provides info on the bot status.
+        '''
 
         # CREATE EMBED
         embed = discord.Embed(title=f"Bot Info", description="", color=bot_utils.green)

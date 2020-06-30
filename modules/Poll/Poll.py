@@ -20,6 +20,9 @@ class Poll(commands.Cog):
 
     @commands.command()
     async def poll(self, ctx, *, topic):
+        '''
+        Creates an interactive poll.
+        '''
 
         result = self.build_result(0,0,0)
         sent_message = await ctx.send(f"**{topic}**\n{result}" )
