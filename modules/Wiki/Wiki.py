@@ -46,7 +46,7 @@ class Wiki(commands.Cog):
 
         Repo.clone_from("https://github.com/3DprinterDiscord/wiki.wiki.git", "runtimefiles/wiki_repo")
 
-        print("[!] Wiki Update Complete")
+        # print("[!] Wiki Update Complete")
 
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
