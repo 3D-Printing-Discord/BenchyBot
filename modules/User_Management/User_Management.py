@@ -41,7 +41,7 @@ class User_Management(commands.Cog):
     async def on_member_remove(self, member):
         channel_object = self.bot.get_channel(self.config_data['membership_channel'])
         
-        embed=discord.Embed(title="Member Left", description=member.mention, color=bot_utils.red)
+        embed=discord.Embed(title="Member Left", description=f"{member} : {member.mention}", color=bot_utils.red)
         await channel_object.send(embed=embed)
 
     @commands.command()
