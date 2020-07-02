@@ -123,6 +123,14 @@ def close_match(search, possible_matches):
     except IndexError:
         return None
 
+def sanitize_input(input_string):
+    '''
+    Removes @ commands etc from inputs. 
+    '''
+
+    result_string = input_string.replace('@', '@/')
+    return(result_string)
+
 async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60, delete_after=True):
     # ADD THE CONFIRM EMOJI
     await confirm_message.add_reaction(emoji)
