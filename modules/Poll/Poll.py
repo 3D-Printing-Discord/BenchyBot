@@ -24,6 +24,8 @@ class Poll(commands.Cog):
         Creates an interactive poll.
         '''
 
+        topic = bot_utils.sanitize_input(topic)
+
         result = self.build_result(0,0,0)
         sent_message = await ctx.send(f"**{topic}**\n{result}" )
 
@@ -108,7 +110,7 @@ class Poll(commands.Cog):
 
         result = self.build_result(yes_count, no_count, maybe_count)
 
-        await message.edit(content=f"**TEST**\n{result}")
+        await message.edit(content=f"**{topic}**\n{result}")
 
     def build_percent_string(self, percent):
         output = str(round(percent*100))
