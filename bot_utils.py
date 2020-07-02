@@ -127,9 +127,10 @@ def sanitize_input(input_string):
     '''
     Removes @ commands etc from inputs. 
     '''
-
-    result_string = input_string.replace('@', '@/')
-    return(result_string)
+    output_str = input_string.replace('@&', '@&/')
+    output_str = output_str.replace("@here", "@/here")
+    output_str = output_str.replace("@everyone", "@/everyone")
+    return(output_str)
 
 async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60, delete_after=True):
     # ADD THE CONFIRM EMOJI
