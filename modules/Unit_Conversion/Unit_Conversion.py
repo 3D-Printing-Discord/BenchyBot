@@ -91,7 +91,7 @@ class Unit_Conversion(commands.Cog):
                 embed.add_field(name="Unit Conversion:", value=ouput_string, inline=False)
 
         if len(embed.fields) > 0:
-            send_embed, user = await bot_utils.await_react_confirm(message, self.bot, emoji='📝')
+            send_embed, user = await bot_utils.await_react_confirm(message, self.bot, emoji='📝', confirm_time=300)
             if send_embed:
                 embed.set_footer(text=f"Conversion Requested By: {user}")
                 await message.channel.send(embed=embed)
