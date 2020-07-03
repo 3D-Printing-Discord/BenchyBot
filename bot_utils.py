@@ -132,6 +132,38 @@ def sanitize_input(input_string):
     output_str = output_str.replace("@everyone", "@/everyone")
     return(output_str)
 
+def simple_parse(input_string, **kwargs):
+
+    args = {}
+
+    split_string = input_string.split()
+
+    for k, v in kwargs.items():
+
+        try:
+            arg_index = split_string.index(f"-{v}")
+            string_value = split_string[arg_index+1] 
+
+            value = convert_to_number(string_value)
+
+            args[k] = value
+            split_string.remove(f"-{v}")
+            split_string.remove(string_value)
+
+        except ValueError:
+            args[k] = None
+            continue
+    
+    trimmed_string = " ".join(split_string)
+    return args, trimmed_string
+
+def convert_to_number(input_var):
+    try:
+        output = float(input_var)
+        return output
+    except ValueError:
+        return 0
+
 async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60, delete_after=True):
     # ADD THE CONFIRM EMOJI
     await confirm_message.add_reaction(emoji)

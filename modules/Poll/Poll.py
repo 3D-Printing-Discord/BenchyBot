@@ -1,6 +1,6 @@
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, flags
 import json
 import math
 import bot_utils
@@ -26,6 +26,11 @@ class Poll(commands.Cog):
 
         topic = bot_utils.sanitize_input(topic)
 
+        args, topic = bot_utils.simple_parse(topic, time='t')
+        
+        if args['time'] is None:
+            args['time'] = 720
+
         result = self.build_result(0,0,0)
         sent_message = await ctx.send(f"**{topic}**\n{result}" )
 
@@ -36,7 +41,7 @@ class Poll(commands.Cog):
         self.messages[int(sent_message.id)] = topic
 
         if DEBUG: print("Going to sleep")
-        await asyncio.sleep(12*60*60)
+        await asyncio.sleep(args['time']*60)
         if DEBUG: print("Woken Up")
     
         del self.messages[sent_message.id]
@@ -72,7 +77,7 @@ class Poll(commands.Cog):
 
             await self.update_message(fetched_message, self.messages[RawReactionActionEvent.message_id])
 
-    def build_result(self, yes, no, maybe):
+    def build_result(self, yes=0, no=0, maybe=0):
         total_answers = yes + no + maybe
 
         if total_answers == 0:
@@ -108,7 +113,7 @@ class Poll(commands.Cog):
         # no_count    = r['👎'] - 1
         # maybe_count = r['🤷‍♀️'] - 1
 
-        result = self.build_result(yes_count, no_count, maybe_count)
+        result = self.build_result(yes=yes_count, no=no_count, maybe=maybe_count)
 
         await message.edit(content=f"**{topic}**\n{result}")
 
