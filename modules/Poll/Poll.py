@@ -31,8 +31,8 @@ class Poll(commands.Cog):
         if args['time'] is None:
             args['time'] = 720
 
-        result = self.build_result(0,0,0)
-        sent_message = await ctx.send(f"**{topic}**\n{result}" )
+        result = self.build_result({'👍':0, '👎':0, '🤷‍♀️':0})
+        sent_message = await ctx.send(f"**{topic}**\n{result}")
 
         await sent_message.add_reaction('👍')
         await sent_message.add_reaction('👎')
@@ -77,24 +77,24 @@ class Poll(commands.Cog):
 
             await self.update_message(fetched_message, self.messages[RawReactionActionEvent.message_id])
 
-    def build_result(self, yes=0, no=0, maybe=0):
-        total_answers = yes + no + maybe
+    def build_result(self, options):
+        total_answers = sum(options.values())
 
         if total_answers == 0:
-            return f"```\n👍| \n👎| \n🤷‍♀️| \nTotal Replies: 0```"
+            results_string = "\n".join([f"{k}|" for k in options.keys()])
+            return f"```\n{results_string}\nTotal Replies: {total_answers}```"
 
-        yes_per = yes / total_answers
-        no_per = no / total_answers
-        maybe_per = maybe / total_answers
+        result_per = {}
+        for k, v in options.items():
+            result_per[k] = v / total_answers
 
         len_factor = 30
-        yes_bar = math.floor(yes_per * len_factor) * "█"
-        no_bar = math.floor(no_per * len_factor) * "█"
-        maybe_bar = math.floor(maybe_per * len_factor) * "█"
+        result_bar = {}
+        for k, v in result_per.items():
+            result_bar[k] = math.floor(v * len_factor) * "█"
 
-        percent_string_test = self.build_percent_string(0.08)
-
-        result = f"```\n👍|{self.build_percent_string(yes_per)}%| {yes_bar}\n👎|{self.build_percent_string(no_per)}%| {no_bar}\n🤷‍♀️|{self.build_percent_string(maybe_per)}%| {maybe_bar}\nTotal Replies: {total_answers}```"
+        results_string = "\n".join([f"{k}|{self.build_percent_string(result_per[k])}%|{v}" for k, v in result_bar.items()])
+        result = f"```\n{results_string}\nTotal Replies: {total_answers}```"
 
         return result
 
@@ -113,7 +113,7 @@ class Poll(commands.Cog):
         # no_count    = r['👎'] - 1
         # maybe_count = r['🤷‍♀️'] - 1
 
-        result = self.build_result(yes=yes_count, no=no_count, maybe=maybe_count)
+        result = self.build_result({'👍':yes_count, '👎':no_count, '🤷‍♀️':maybe_count})
 
         await message.edit(content=f"**{topic}**\n{result}")
 
