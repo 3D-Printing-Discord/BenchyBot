@@ -71,7 +71,10 @@ class Poll(commands.Cog):
             if DEBUG: print("-- Poll Message")
 
             reacts_to_remove = ['👍', '👎', '🤷‍♀️']
-            reacts_to_remove.remove(str(RawReactionActionEvent.emoji))
+            try:
+                reacts_to_remove.remove(str(RawReactionActionEvent.emoji))
+            except ValueError:
+                reacts_to_remove = reacts_to_remove
             for r in reacts_to_remove:
                 await fetched_message.remove_reaction(r, react_user)
 
