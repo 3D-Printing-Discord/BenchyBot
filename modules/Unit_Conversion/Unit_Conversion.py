@@ -96,27 +96,6 @@ class Unit_Conversion(commands.Cog):
                 embed.set_footer(text=f"Conversion Requested By: {user}")
                 await message.channel.send(embed=embed)
 
-    @commands.command()
-    async def convert(self, ctx, string):
-        quants = parser.parse(ctx.message.content)
-
-        embed=discord.Embed(title="Unit Conversions")
-
-        for q in quants:
-            for conversion in self.measures:
-
-                if str(q.unit) == conversion[0]:
-
-                    result = q.value * conversion[2]
-                    output_unit = conversion[1]
-
-                    ouput_string = f"{q.value} {q.unit} = {result:.2f} {output_unit}"
-                    embed.add_field(name="Conversion:", value=ouput_string, inline=False)
-        
-        if len(embed.fields) > 0:
-            await ctx.send(embed=embed)
-
-
     async def generate_output_embed(self, quants):
         embed=discord.Embed(title=" ")
 
