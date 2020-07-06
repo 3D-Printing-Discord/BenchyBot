@@ -5,6 +5,7 @@ import bot_utils
 import datetime
 from matplotlib import pyplot as plt
 import sqlite3
+from scipy.signal import savgol_filter
 
 class User_Management(commands.Cog):
     version = "v0.1"
@@ -31,7 +32,7 @@ class User_Management(commands.Cog):
         channel_object = self.bot.get_channel(self.config_data['membership_channel'])
 
         if time_delta.days < 1:
-            embed=discord.Embed(title="New Member", description=f"{member.mention} [New Discord User]", color=bot_utils.green)
+            embed=discord.Embed(title="New Member", description=f"{member.mention} [New Discord User: {time_delta.seconds / 60} mins]", color=bot_utils.green)
         else:
             embed=discord.Embed(title="New Member", description=member.mention, color=bot_utils.green)
 
@@ -113,6 +114,42 @@ class User_Management(commands.Cog):
             plt.savefig('runtimefiles/user_activity.png')
             plt.clf() 
 
+
+            ### --- USER CHANGE --- ###
+
+            # GET ACTIVITY NUMBERS
+            self.c.execute("SELECT * FROM User_Activity")
+            user_activity = self.c.fetchall()
+
+            # trimmed_data = user_activity[:1344]
+            trimmed_data = user_activity[:50]
+
+            x_data = [datetime.datetime.strptime(d[0], '%Y-%m-%d %H:%M:%S.%f') for d in trimmed_data]
+            y_data = [d[2] for d in trimmed_data]
+
+            # PLOT AND SET TITLES 
+            plt.plot(x_data,y_data, color="black")
+            plt.xlabel('Date')
+            plt.ylabel('Users')
+            plt.title('7-Day User Numbers')
+
+            # SAVE IMAGE
+            plt.savefig('runtimefiles/7-day-users.png')
+            plt.clf() 
+
+            # y_diff = savgol_filter(y_data, window_length=3, polyorder=2, deriv=1)
+            y_diff = [0] + [y - x for x, y in zip(y_data[:-1], y_data[1:])]
+
+            # PLOT AND SET TITLES 
+            plt.plot(x_data,y_diff, color="black")
+            plt.xlabel('Date')
+            plt.ylabel('Users')
+            plt.title('7-Day User Change')
+
+            # SAVE IMAGE
+            plt.savefig('runtimefiles/7-user-change.png')
+            plt.clf() 
+
             ### --- SEND OBJECTS --- ###
 
             # SEND EMBED
@@ -121,9 +158,13 @@ class User_Management(commands.Cog):
             # LOAD DISCORD FILE
             loaded_file_1 = discord.File("runtimefiles/user_graph.png", filename="image1.png")
             loaded_file_2 = discord.File("runtimefiles/user_activity.png", filename="image2.png")
+            loaded_file_3 = discord.File("runtimefiles/7-day-users.png", filename="image3.png")
+            loaded_file_4 = discord.File("runtimefiles/7-user-change.png", filename="image4.png")
 
             # SEND GRAPH
             await ctx.send(file=loaded_file_1)
+            await ctx.send(file=loaded_file_3)
+            await ctx.send(file=loaded_file_4)
             await ctx.send(file=loaded_file_2)
 
     @commands.command()
@@ -185,7 +226,7 @@ class User_Management(commands.Cog):
 
         online_members = len([member for member in members if member.status == discord.Status.online])
 
-        self.c.execute("INSERT INTO User_Activity(time_stamp, online) VALUES (?, ?)", (datetime.datetime.utcnow(), online_members))
+        self.c.execute("INSERT INTO User_Activity(time_stamp, online, total_users) VALUES (?, ?, ?)", (datetime.datetime.utcnow(), online_members, len(members)))
         self.conn.commit()
 
 def setup(bot):
