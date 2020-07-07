@@ -36,7 +36,7 @@ class Bot_Management(commands.Cog):
         embed.add_field(name="Uptime", value=(datetime.datetime.utcnow()-self.bot.start_time), inline=False)
 
 
-        await ctx.send(embed=embed)
+        await ctx.send('```To load modules use:   load_module [module name]\nTo unload modules use: unload_module [module name]\nTo reload modules use: reload_module [module name]\n```', embed=embed)
 
     @commands.command(hidden=True)
     @commands.check(bot_utils.is_admin)
