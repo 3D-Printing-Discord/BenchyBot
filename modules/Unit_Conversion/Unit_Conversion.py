@@ -56,7 +56,6 @@ class Unit_Conversion(commands.Cog):
         embed=discord.Embed(title=" ")
 
         for q in quants:
-            # print(q.unit)
             if str(q.unit) in self.measures.keys():
                 conversion_units = self.measures[str(q.unit)]
                 result = result = q.value * conversion_units[1] + conversion_units[2]
@@ -81,7 +80,7 @@ class Unit_Conversion(commands.Cog):
                 embed.add_field(name="Currency Conversion:", value=conversions_string, inline=False)
 
             # SPECIAL CASES
-            elif str(q.unit) == "attowatt gausses":
+            elif str(q.unit) == "attowatt gausses": # AWG
                 n = q.value
                 result = 0.127 * pow(92, ((36-n)/39))
                 print(result)
@@ -89,6 +88,11 @@ class Unit_Conversion(commands.Cog):
                 ouput_string = f"{q.value} AWG = {result:.4f} Ømm"
 
                 embed.add_field(name="Unit Conversion:", value=ouput_string, inline=False)
+
+            elif str(q.unit) == 'year': # Years to seconds (regs only)
+                if message.channel.id == 260957117412802561:
+                    output_string = f"{12 * q.value} months\n{365 * q.value} days\n{525600 * q.value} minutes\n{31536000 * q.value} seconds"
+                    embed.add_field(name="xkuyax wanted to know:", value=output_string, inline=False)
 
         if len(embed.fields) > 0:
             send_embed, user = await bot_utils.await_react_confirm(message, self.bot, emoji='📝', confirm_time=300)
