@@ -28,7 +28,7 @@ class Showcase(commands.Cog):
     async def on_message(self, message):
         if message.channel.id in self.config_data['showcase_channels']:
 
-            if any(role in message.author.roles for role in bot_utils.admin_roles):
+            if any(role.id in bot_utils.admin_roles for role in message.author.roles):
                 return
 
             if message.attachments or any(True for term in self.whitelist if term in message.content):
