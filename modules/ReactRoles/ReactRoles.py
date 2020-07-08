@@ -133,7 +133,7 @@ class ReactRoles(commands.Cog):
     @flags.add_flag("--title", default="Pick Your Roles!")
     @flags.add_flag("--text", default="Pick your roles by reacting with the following emoji.")
     @flags.add_flag("--roles", default=None)
-    @flags.add_flag("--reacts", default="🔴 🟠 🟡 🟢 🔵 🟣 🟤 🟥 🟧 🟨 🟩 🟦 🟪 🔶 🔷")
+    @flags.add_flag("--reacts", default="🔴 🟡 🟢 🔵 🟣 🟤 🟠 🟥 🟧 🟨 🟩 🟦 🟪 🔶 🔷")
     @commands.has_any_role(*bot_utils.admin_roles)
     @flags.command()
     async def create_reaction_roles_widget(self, ctx, **flags):
@@ -150,6 +150,12 @@ class ReactRoles(commands.Cog):
         # CONVERT ROLES INTO INTO LIST
         roles = flags['roles'].split(" ")
         roles = [int(i) for i in roles]
+
+        if any(r in bot_utils.reg_roles for r in roles):
+            list_of_roles = [ctx.guild.get_role(r).name for r in roles]
+            string_of_roles = "\n".join(list_of_roles)
+            if not await bot_utils.await_confirm(ctx, f"**----- ‼️ WARNING ‼️ -----**\nThe reaction roles widget that you are trying to create will allow any user with access to this channel to apply roles with elevated permissions!\n\nThe roles in this widget are:```\n{string_of_roles}\n```\nAre you sure you want to continue?", confirm_time=60):
+                return
 
         # CONVERT EMOJIS INTO LIST
         reacts = flags['reacts'].split(" ")
