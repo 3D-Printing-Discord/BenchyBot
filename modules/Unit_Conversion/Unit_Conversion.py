@@ -26,6 +26,7 @@ class Unit_Conversion(commands.Cog):
             "stone":  ["kg", 6.35029, 0],
             "gallon": ["l", 4.54609, 0],
             "mile":   ["km", 1.60934, 0],
+            "pound per square inch": ["Bar", 0.0689476, 0],
             "degree fahrenheit": ["C", 5/9, -32],
             "degree celsius":    ["F", 9/5, 32]
         }
