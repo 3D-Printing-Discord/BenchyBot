@@ -19,7 +19,7 @@ class Poll(commands.Cog):
         # self.reacts_list = ['👍', '👎', '🤷‍♀️']
 
     @commands.command()
-    async def poll(self, ctx, *, topic):
+    async def poll(self, ctx, *, topic="Poll:"):
         '''
         Creates an interactive poll.
         '''
@@ -27,7 +27,8 @@ class Poll(commands.Cog):
         topic = bot_utils.sanitize_input(topic)
 
         args, topic = bot_utils.simple_parse(topic, time='t')
-        
+        args['time'] = bot_utils.convert_to_number(args['time'])
+
         if args['time'] is None:
             args['time'] = 720
 
