@@ -6,3 +6,4 @@ quantulum3
 PyGithub
 scipy
 beautifulsoup4
+d20
