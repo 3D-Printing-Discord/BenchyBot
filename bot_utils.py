@@ -2,6 +2,7 @@ import discord
 from datetime import datetime
 import asyncio
 import difflib
+import shlex
 
 # ---------- STANDARDISED COLOURS ----------
 blue = 0x89cff0
@@ -16,10 +17,9 @@ admin_roles = [167872530860867586, 167872106644635648]
 reg_roles = [260945795744792578] + admin_roles
 
 # ---------- FUNCTIONS ----------
-
 async def is_admin(ctx):
     """
-    Checks if user is an admin
+    Checks if user is an admin. This function is depreciated and will be removed in a future version.
     """
     roles = ctx.bot.config['admin_roles']
 
@@ -31,7 +31,7 @@ async def is_admin(ctx):
 
 async def is_mod(ctx):
     """
-    Checks if user is a mod
+    Checks if user is a mod. This function is depreciated and will be removed in a future version.
     """
     roles = ctx.bot.config['admin_roles'] + ctx.bot.config['mod_roles']
 
@@ -78,11 +78,15 @@ async def bot_log(bot, log):
         await channel.send(f"{log}")
 
 async def await_confirm(ctx, message, delete_after=True, confirm_time=10):
+    '''
+    Sends a message and waits for confirmation. 
+    '''
+
     # SEND THE SUGGESTIONS
     sent_message = await ctx.send(message)
 
     # ADD THE CONFIRM EMOJI
-    await sent_message.add_reaction("👍")
+    await sent_message.add_reaction('👍')
 
     # DEF CHECK OF RESPONSE
     def check(reaction, user):
@@ -107,7 +111,34 @@ async def await_confirm(ctx, message, delete_after=True, confirm_time=10):
             await sent_message.clear_reactions()
         return False
 
+async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60, delete_after=True):
+    '''
+    Reacts to a message and awaits a user to agree.
+    '''
+
+    # ADD THE CONFIRM EMOJI
+    try:
+        await confirm_message.add_reaction(emoji)
+    except:
+        return False, None
+
+    # DEF CHECK FOR RESPONSE
+    def check(reaction, user):
+        return str(reaction.emoji) == emoji and user != bot.user and confirm_message.id == reaction.message.id
+
+    # AWAIT AND HANDLE RESPONSE
+    try:
+        reaction, user = await bot.wait_for('reaction_add', timeout=confirm_time, check=check)
+        if delete_after: await confirm_message.clear_reactions()
+        return True, user
+    except TimeoutError:
+        if delete_after: await confirm_message.clear_reactions()
+        return False, None
+
 def close_match(search, possible_matches):
+    '''
+    Finds close string matches using difflib.get_close_matches
+    '''
 
     possible_matches_lower = [i.lower() for i in possible_matches]
 
@@ -127,7 +158,7 @@ def close_match(search, possible_matches):
 
 def sanitize_input(input_string):
     '''
-    Removes @ commands etc from inputs. 
+    Removes tags commands etc from inputs. 
     '''
     output_str = input_string.replace('@&', '@&/')
     output_str = output_str.replace("@here", "@/here")
@@ -135,10 +166,13 @@ def sanitize_input(input_string):
     return(output_str)
 
 def simple_parse(input_string, **kwargs):
+    '''
+    Parses arguments from a string.
+    '''
 
     args = {}
 
-    split_string = input_string.split()
+    split_string = shlex.split(input_string)
 
     for k, v in kwargs.items():
 
@@ -146,9 +180,7 @@ def simple_parse(input_string, **kwargs):
             arg_index = split_string.index(f"-{v}")
             string_value = split_string[arg_index+1] 
 
-            value = convert_to_number(string_value)
-
-            args[k] = value
+            args[k] = string_value
             split_string.remove(f"-{v}")
             split_string.remove(string_value)
 
@@ -163,22 +195,5 @@ def convert_to_number(input_var):
     try:
         output = float(input_var)
         return output
-    except ValueError:
-        return 0
-
-async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60, delete_after=True):
-    # ADD THE CONFIRM EMOJI
-    await confirm_message.add_reaction(emoji)
-
-    # DEF CHECK FOR RESPONSE
-    def check(reaction, user):
-        return str(reaction.emoji) == emoji and user != bot.user and confirm_message.id == reaction.message.id
-
-    # AWAIT AND HANDLE RESPONSE
-    try:
-        reaction, user = await bot.wait_for('reaction_add', timeout=confirm_time, check=check)
-        if delete_after: await confirm_message.clear_reactions()
-        return True, user
-    except asyncio.TimeoutError:
-        if delete_after: await confirm_message.clear_reactions()
-        return False, None
+    except:
+        return None
