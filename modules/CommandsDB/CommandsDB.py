@@ -77,8 +77,21 @@ class CommandsDB(commands.Cog):
         # GET RESPONSE
         response = command[1]
 
-        # SEND COMMAND RESPONSE
-        await ctx.send(response)
+        flags, trimmed_response = bot_utils.simple_parse(response, embed='e', colour='c')
+
+        if flags['embed']:
+            if flags['colour'] == None:
+                flags['colour'] = bot_utils.green
+            else:
+                try:
+                    flags['colour'] = int(flags['colour'], 16)
+                except ValueError:
+                    flags['colour'] = bot_utils.green
+
+            embed = discord.Embed(title=flags['embed'], description=trimmed_response, color=flags['colour'])
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(bot_utils.sanitize_input(response))
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
