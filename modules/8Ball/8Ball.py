@@ -6,7 +6,7 @@ import random
 import asyncio
 import bot_utils
 
-class Template(commands.Cog):
+class Magic8(commands.Cog):
     version = "v0.1"
 
     def __init__(self, bot):
@@ -40,4 +40,4 @@ class Template(commands.Cog):
         await message.edit(embed=embed)
 
 def setup(bot):
-    bot.add_cog(Template(bot))
+    bot.add_cog(Magic8(bot))
