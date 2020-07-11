@@ -104,8 +104,12 @@ class GCode(commands.Cog):
             await ctx.send("Im sorry, I dont know that one!")
             return
 
-        self.c.execute("SELECT * FROM GCode WHERE flavour='marlin' AND name=?", (name, ))
+        print(name)
+
+        self.c.execute("SELECT * FROM GCode WHERE flavour='marlin' AND command=?", (name, ))
         result = self.c.fetchone()
+
+        print(result)
 
         lookup = result[1]
 
