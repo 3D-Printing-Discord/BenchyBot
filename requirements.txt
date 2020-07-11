@@ -5,3 +5,4 @@ sklearn
 quantulum3
 PyGithub
 scipy
+beautifulsoup4
