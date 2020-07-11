@@ -51,7 +51,10 @@ class Unit_Conversion(commands.Cog):
         if message.author == self.bot.user:
             return
 
-        quants = parser.parse(message.content)
+        try:
+            quants = parser.parse(message.content)
+        except KeyError:
+            print("[!] quantulum3 internal error")
         channel = message.channel
 
         embed=discord.Embed(title=" ")
@@ -84,10 +87,9 @@ class Unit_Conversion(commands.Cog):
             elif str(q.unit) == "attowatt gausses": # AWG
                 n = q.value
                 result = 0.127 * pow(92, ((36-n)/39))
-                print(result)
+                result_area = 3.14159 * pow(result/2, 2)
 
-                ouput_string = f"{q.value} AWG = {result:.4f} Ømm"
-
+                ouput_string = f"{q.value} AWG = {result:.4f} Ømm\n{q.value} AWG = {result_area:.4f} mm2"
                 embed.add_field(name="Unit Conversion:", value=ouput_string, inline=False)
 
             elif str(q.unit) == 'year': # Years to seconds (regs only)
