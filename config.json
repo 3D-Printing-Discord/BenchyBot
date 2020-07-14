@@ -2,7 +2,7 @@
     "description": "Benchybot Mk2",
     "log_level": "FULL",
     "prefix": "?",
-    "modules": ["Bot_Management", "Report", "ReactRoles", "Unit_Conversion", "DM", "Wiki", "CommandsDB", "Poll", "User_Management", "Showcase", "8Ball", "Scheduler", "Dice", "Yeet", "mute"],
+    "modules": ["Bot_Management", "Report", "ReactRoles", "Unit_Conversion", "DM", "Wiki", "CommandsDB", "Poll", "User_Management", "Showcase", "8Ball", "Scheduler", "Dice", "Yeet", "Mute", "SelfPromotion", "PCPart"],
     "admin_roles": [640523571575259146, 167872530860867586, 167872106644635648],
     "mod_roles": [724004523814682767, 260945795744792578],
     "bot_channels": [700421839872327741, 339978089411117076, 471446895089156108, 667463307963138058],
