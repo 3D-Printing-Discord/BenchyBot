@@ -131,7 +131,7 @@ async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60
         reaction, user = await bot.wait_for('reaction_add', timeout=confirm_time, check=check)
         if delete_after: await confirm_message.clear_reactions()
         return True, user
-    except TimeoutError:
+    except:
         if delete_after: await confirm_message.clear_reactions()
         return False, None
 
@@ -172,7 +172,8 @@ def simple_parse(input_string, **kwargs):
 
     args = {}
 
-    split_string = shlex.split(input_string)
+    # split_string = shlex.split(input_string)
+    split_string = input_string.split(" ")
 
     for k, v in kwargs.items():
 
