@@ -13,6 +13,30 @@ class Magic8(commands.Cog):
         self.bot = bot
 
     @commands.command()
+    @commands.has_any_role(*bot_utils.reg_roles)
+    async def fortune(self, ctx):
+
+        embed = discord.Embed(title="Fortune Cookie", description="Lets find out your fortune!")
+        message = await ctx.send(embed=embed)
+
+        await asyncio.sleep(2)
+
+        embed = discord.Embed(title="Fortune Cookie", description="Unwrapping the cookie...")
+        await message.edit(embed=embed)
+
+        await asyncio.sleep(5)
+
+        f = open("modules/8Ball/fortune.txt", "r")
+        responses = f.readlines()
+        f.close()
+
+        answer = random.choice(responses).strip()
+
+        embed = discord.Embed(title="Fortune Cookie", description=answer)
+        await message.edit(embed=embed)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.reg_roles)
     async def magic8(self, ctx):
         embed = discord.Embed(title="Lets find out!", description="Shaking proverbial magic eight Ball...")
         message = await ctx.send(embed=embed)
