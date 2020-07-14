@@ -28,14 +28,14 @@ class SelfPromotion(commands.Cog):
 
         if message.channel.id == self.config_data['promotion_channel']:
             promotion_per = self.calc_percentage(message.author)*100
-            print(f"promotion message from: {message.author} with {promotion_per*100:.2f}% promotion")
+            print(f"promotion message from: {message.author} with {promotion_per:.2f}% promotion")
             if promotion_per > self.config_data['post_threshold']:
                 await message.delete()
                 try:
                     await message.author.send(self.config_data['delete_message'])
                 except:
                     print("Couldnt message!")
-                await message.guild.get_channel(self.config_data['log_channel']).send(f"Message removed in self-promotion by {message.author}\n\n```{message.content}```")
+                await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion\n\n```{message.content}```")
             
 
     @commands.command()
@@ -62,7 +62,7 @@ class SelfPromotion(commands.Cog):
         try:
             promotion_ratio = len(promotion)/len(non_promotion)
         except ZeroDivisionError:
-            promotion_ratio = 0
+            promotion_ratio = 1
         
         return promotion_ratio
 
