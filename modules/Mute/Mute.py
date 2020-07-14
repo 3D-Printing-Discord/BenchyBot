@@ -16,9 +16,10 @@ class Mute(commands.Cog):
             self.config_data = json.load(f)
 
     @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def mute(self, ctx, member: discord.Member, time):
         try:
-            time = int(time)
+            time = float(time)
         except:
             ctx.send
 
