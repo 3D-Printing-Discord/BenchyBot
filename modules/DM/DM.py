@@ -30,5 +30,23 @@ class DM(commands.Cog):
             # RESPOND TO USER
             await message.author.send(self.config_data["bot_response"])
 
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def reply(self, ctx, member: discord.Member, *, message):
+        await ctx.message.delete()
+        await member.send(f"Message from the mods:\n{message}")
+        embed = discord.Embed(title="Direct Message Response Sent", color=bot_utils.yellow)
+        embed.add_field(name="To", value=member, inline=False)
+        embed.add_field(name="Content", value=message, inline=False)
+        embed.set_footer(text=f"Sent by: {ctx.author}")
+        await ctx.guild.get_channel(self.config_data["bot_mail_channel"]).send(embed=embed)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.reg_roles)
+    async def page(self, ctx, *, message):
+        embed = discord.Embed(title=f"{ctx.author} is requesting assistance!", color=bot_utils.red)
+        embed.add_field(name="Message", value=message, inline=False)
+        await ctx.guild.get_channel(self.config_data["bot_mail_channel"]).send("@here", embed=embed)
+
 def setup(bot):
     bot.add_cog(DM(bot))
