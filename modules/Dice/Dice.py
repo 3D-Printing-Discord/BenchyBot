@@ -13,9 +13,9 @@ class Dice(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.config_data = []
-        with open('modules/Dice/config.json') as f:
-            self.config_data = json.load(f)
+        # self.config_data = []
+        # with open('modules/Dice/config.json') as f:
+        #     self.config_data = json.load(f)
 
     @commands.command()
     async def d20(self, ctx, *, d='1d6'):

@@ -46,7 +46,6 @@ class Blacklist(commands.Cog):
             self.c.execute("INSERT INTO Blacklist(term) VALUES (?)", (term,))
             self.conn.commit()
             await ctx.send(f"'{term}' added to blacklist!")
-            await bot_utils.bot_log(self.bot, f"'Blacklist term '{term}' added by {ctx.message.author}")
         except:
             await ctx.send(f"'{term}' failed to add to blacklist!")
 
@@ -60,7 +59,6 @@ class Blacklist(commands.Cog):
             self.c.execute("DELETE FROM Blacklist WHERE term=?", (term,))
             self.conn.commit() 
             await ctx.send(f"'{term}' removed from blacklist!")
-            await bot_utils.bot_log(self.bot, f"'Blacklist term {term} removed by {ctx.message.author}")
         except:
             await ctx.send(f"'{term}' failed to remove from blacklist!")
 

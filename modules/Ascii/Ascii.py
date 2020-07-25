@@ -18,6 +18,7 @@ class Ascii(commands.Cog):
     @commands.has_any_role(*bot_utils.reg_roles)
     @commands.command()
     async def ascii(self, ctx, *, input_string):
+        '''Displays ascii art.'''
         await ctx.message.delete()
 
         args, input_string = bot_utils.simple_parse(input_string, font='f')

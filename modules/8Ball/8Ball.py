@@ -15,6 +15,7 @@ class Magic8(commands.Cog):
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
     async def fortune(self, ctx):
+        '''Open a fortune cookie!'''
 
         embed = discord.Embed(title="Fortune Cookie", description="Lets find out your fortune!")
         message = await ctx.send(embed=embed)
@@ -38,6 +39,7 @@ class Magic8(commands.Cog):
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
     async def magic8(self, ctx):
+        '''Ask the Magic-8-Ball a question!'''
         embed = discord.Embed(title="Lets find out!", description="Shaking proverbial magic eight Ball...")
         message = await ctx.send(embed=embed)
 
