@@ -27,15 +27,28 @@ class SelfPromotion(commands.Cog):
         self.conn.commit()
 
         if message.channel.id == self.config_data['promotion_channel']:
+
+            # PROMOTION PERCENTAGE 
             promotion_per = self.calc_percentage(message.author)*100
-            print(f"promotion message from: {message.author} with {promotion_per:.2f}% promotion")
             if promotion_per > self.config_data['post_threshold']:
                 await message.delete()
                 try:
                     await message.author.send(self.config_data['delete_message'])
+                    await message.author.send(f"Reason for deletion:```\nSelf promotion messages must be under {self.config_data['post_threshold']}%. Current: {promotion_per:.2f}%")
+                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to excessive self promotion (`{promotion_per}%`)\n\nDM Sent Successfully.\n\n```{message.content}```")
                 except:
-                    print("Couldnt message!")
-                await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to excessive self promotion (`{promotion_per}%`)\n\n```{message.content}```")
+                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to excessive self promotion (`{promotion_per}%`)\n\nDM **Failed To Send**.\n\n```{message.content}```")
+            
+            # SERVER AGE
+            days_on_server = (datetime.datetime.utcnow() - message.author.joined_at).days
+            if days_on_server < self.config_data['age_min']:
+                await message.delete()
+                try:
+                    await message.author.send(self.config_data['delete_message'])
+                    await message.author.send(f"Reason for deletion:```\nYour account must be over {self.config_data['age_min']} days. Current: {days_on_server} days")
+                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to account age (`{days_on_server} days old`)\n\nDM Sent Successfully.\n\n```{message.content}```")
+                except:
+                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to account age (`{days_on_server} days old`)\n\nDM **Failed To Send**.\n\n```{message.content}```")
             
 
     @commands.command()
