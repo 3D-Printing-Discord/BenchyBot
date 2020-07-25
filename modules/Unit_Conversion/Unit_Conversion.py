@@ -55,6 +55,7 @@ class Unit_Conversion(commands.Cog):
             quants = parser.parse(message.content)
         except KeyError:
             print("[!] quantulum3 internal error")
+            return
         channel = message.channel
 
         embed=discord.Embed(title=" ")
@@ -95,7 +96,7 @@ class Unit_Conversion(commands.Cog):
             elif str(q.unit) == 'year': # Years to seconds (regs only)
                 if message.channel.id == 260957117412802561:
                     output_string = f"{12 * q.value} months\n{365 * q.value} days\n{525600 * q.value} minutes\n{31536000 * q.value} seconds"
-                    embed.add_field(name="xkuyax wanted to know:", value=output_string, inline=False)
+                    embed.add_field(name="xkuyax wanted everyone to know:", value=output_string, inline=False)
 
         if len(embed.fields) > 0:
             send_embed, user = await bot_utils.await_react_confirm(message, self.bot, emoji='📝', confirm_time=300)

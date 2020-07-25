@@ -35,7 +35,7 @@ class SelfPromotion(commands.Cog):
                     await message.author.send(self.config_data['delete_message'])
                 except:
                     print("Couldnt message!")
-                await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion\n\n```{message.content}```")
+                await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to excessive self promotion (`{promotion_per}%`)\n\n```{message.content}```")
             
 
     @commands.command()
@@ -50,7 +50,7 @@ class SelfPromotion(commands.Cog):
 
         percentage = self.calc_percentage(member)
 
-        await ctx.send(f"Percentage of messages that are self-promotion for {member}:```{percentage*100:.2f}%```")
+        await ctx.send(f"Percentage of messages that are self-promotion for {member}:```{percentage*100:.2f} %```")
 
     def calc_percentage(self, member):
         self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND NOT channel=?", (member.id, self.config_data['promotion_channel']))
@@ -65,6 +65,24 @@ class SelfPromotion(commands.Cog):
             promotion_ratio = 1
         
         return promotion_ratio
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def selfpromotion_exempt(self, ctx, member: discord.Member=None):
+        '''
+        Adds temporary exemption to the self promotion rules.
+        '''
+
+        if member == None:
+            member = ctx.author
+        
+        message = await ctx.send("Working...")
+
+        for i in range(0,100):
+            self.c.execute("INSERT INTO SelfPromotion(user_id, date, channel) VALUES (?, ?, ?)", (member.id, ctx.message.created_at, ctx.channel.id))
+        self.conn.commit()
+
+        await message.edit(content=f"Done. New self promotion percentage:```{self.calc_percentage(member):.2f} %```")
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)

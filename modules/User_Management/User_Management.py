@@ -6,6 +6,7 @@ import datetime
 from matplotlib import pyplot as plt
 import sqlite3
 from scipy.signal import savgol_filter
+import os
 
 class User_Management(commands.Cog):
     version = "v0.1"
@@ -90,6 +91,8 @@ class User_Management(commands.Cog):
             plt.title('User Growth')
 
             # SAVE IMAGE
+            if os.path.isfile('runtimefiles/user_graph.png'):
+                os.remove('runtimefiles/user_graph.png')
             plt.savefig('runtimefiles/user_graph.png')
             plt.clf() 
 
@@ -99,7 +102,11 @@ class User_Management(commands.Cog):
             self.c.execute("SELECT * FROM User_Activity")
             user_activity = self.c.fetchall()
 
-            trimmed_data = user_activity[:672]
+            trimmed_data = user_activity[-672:]
+
+            print(len(trimmed_data))
+            print(trimmed_data[0])
+            print(trimmed_data[-1])
 
             x_data = [datetime.datetime.strptime(d[0], '%Y-%m-%d %H:%M:%S.%f') for d in trimmed_data]
             y_data = [int(d[1]) for d in trimmed_data]
@@ -111,6 +118,8 @@ class User_Management(commands.Cog):
             plt.title('7-Day User Activity')
 
             # SAVE IMAGE
+            if os.path.isfile('runtimefiles/user_activity.png'):
+                os.remove('runtimefiles/user_activity.png')
             plt.savefig('runtimefiles/user_activity.png')
             plt.clf() 
 
@@ -122,7 +131,7 @@ class User_Management(commands.Cog):
             user_activity = self.c.fetchall()
 
             # trimmed_data = user_activity[:1344]
-            trimmed_data = user_activity[:50]
+            trimmed_data = user_activity[-672:]
 
             x_data = [datetime.datetime.strptime(d[0], '%Y-%m-%d %H:%M:%S.%f') for d in trimmed_data]
             y_data = [d[2] for d in trimmed_data]
@@ -134,11 +143,13 @@ class User_Management(commands.Cog):
             plt.title('7-Day User Numbers')
 
             # SAVE IMAGE
+            if os.path.isfile('runtimefiles/7-day-users.png'):
+                os.remove('runtimefiles/7-day-users.png')
             plt.savefig('runtimefiles/7-day-users.png')
             plt.clf() 
 
-            # y_diff = savgol_filter(y_data, window_length=3, polyorder=2, deriv=1)
-            y_diff = [0] + [y - x for x, y in zip(y_data[:-1], y_data[1:])]
+            y_diff = savgol_filter(y_data, window_length=41, polyorder=2, deriv=1)
+            # y_diff = [0] + [y - x for x, y in zip(y_data[:-1], y_data[1:])]
 
             # PLOT AND SET TITLES 
             plt.plot(x_data,y_diff, color="black")
@@ -147,6 +158,8 @@ class User_Management(commands.Cog):
             plt.title('7-Day User Change')
 
             # SAVE IMAGE
+            if os.path.isfile('runtimefiles/7-user-change.png'):
+                os.remove('runtimefiles/7-user-change.png')
             plt.savefig('runtimefiles/7-user-change.png')
             plt.clf() 
 

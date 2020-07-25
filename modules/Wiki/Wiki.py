@@ -71,6 +71,7 @@ class Wiki(commands.Cog):
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
     async def wiki_who(self, ctx, username=None):
+        '''Displays discord users github names.'''
         # GET DATABASE RESULTS
         self.c.execute("SELECT * FROM Wiki")
         result = self.c.fetchall()
