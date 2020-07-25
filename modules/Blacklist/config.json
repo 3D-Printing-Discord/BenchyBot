@@ -1,4 +1,3 @@
 {
-    "blacklist_message": "Your recent message was removed due to containing a blacklisted term. If you beleive this was an error please contact a mod.",
-    "report_channel": 525494034203017246
+    "blacklist_message": "Your recent message was removed due to containing a blacklisted term. If you beleive this was an error you can reply to this message to contact the mods."
 }

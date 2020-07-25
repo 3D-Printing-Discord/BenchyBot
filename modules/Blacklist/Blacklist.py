@@ -31,8 +31,8 @@ class Blacklist(commands.Cog):
                     if self.config_data["blacklist_message"] != "":
                         await message.author.send(self.config_data["blacklist_message"])
 
-                    embed=discord.Embed(title="Blacklist Message Removed", description=f"```Message: '{message.content}'\n     By: {message.author}\n     In: {message.channel}", color=bot_utils.red)
-                    await self.bot.get_channel(self.config_data['report_channel']).send(embed=embed)
+                    embed=discord.Embed(title="Blacklist Message Removed", description=f"Message: '{message.content}'\n     By: {message.author.mention}\n     In: {message.channel.mention}", color=bot_utils.red)
+                    await self.bot.get_channel(self.bot.config['bot_log_channel']).send(embed=embed)
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -53,7 +53,7 @@ class Blacklist(commands.Cog):
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def remove_banned_term(self, ctx, term):
-        """Adds blacklisted terms to the database"""
+        """Removes blacklisted terms from the database"""
         print(f"[!] Removing {term} from databse!")
         # Load blacklist terms
         try:
@@ -67,6 +67,7 @@ class Blacklist(commands.Cog):
     @commands.command(hidden=True)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def view_banned_terms(self, ctx):
+        '''Shows the currently blacklisted terms.'''
         self.c.execute(f"SELECT * FROM Blacklist")
         banned_terms = self.c.fetchall()
 
