@@ -17,7 +17,8 @@ class Showcase(commands.Cog):
             'thingiverse.com',
             'imgur.com',
             'youtu.be',
-            'discordapp.com/attachments'
+            'discordapp.com/attachments',
+            'media.discordapp.net'
         ]
 
         self.reacts = ['👍', '❤️', '🆒', '😍', '📸', '🎉', '🎊']
@@ -42,7 +43,7 @@ class Showcase(commands.Cog):
                 except discord.errors.Forbidden:
                     print(f"[!] Couldnt Message: {message.author}")
                 await message.delete()
-                await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Showcase message from {message.author} removed.\n\n```{message.content}```")
+                await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Showcase message from {message.author} removed.```{message.content}```")
 
 def setup(bot):
     bot.add_cog(Showcase(bot))
