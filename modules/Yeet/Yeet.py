@@ -4,6 +4,7 @@ from discord.ext import commands
 import json
 import asyncio
 import random
+import bot_utils
 
 class Yeet(commands.Cog):
     version = "v0.1"
@@ -26,6 +27,7 @@ class Yeet(commands.Cog):
                 self.yeets = self.yeets + 1
 
     @commands.command()
+    @commands.has_any_role(*bot_utils.reg_roles)
     async def yeet(self, ctx):
         '''
         Shows yeet count.
@@ -34,6 +36,7 @@ class Yeet(commands.Cog):
         await ctx.send(f"Thats {self.yeets} yeets!")
 
     @commands.command()
+    @commands.has_any_role(*bot_utils.reg_roles)
     async def unyeet(self, ctx):
         '''
         Resets Yeet count.
