@@ -182,21 +182,16 @@ class User_Management(commands.Cog):
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def user_info(self, ctx, username):
+    async def user_info(self, ctx, member: discord.Member):
         '''
         Gets info on a user
         '''
 
-        # GET MEMEBER
-        member = discord.utils.find(lambda m: username.lower() in m.name.lower(), ctx.guild.members)
-
-        # CHECK MEMBER EXISTS
-        if member is None:
-            await ctx.send("Member Not Found.")
-            return
-
         # EMBED
-        embed = discord.Embed(title=f"User Info For {member}", description=f"Display Name: {member.display_name}", color=bot_utils.green)
+        embed = discord.Embed(title=f"User Info For {member}", color=bot_utils.green)
+
+        # DISPLAY NAME
+        embed.add_field(name="Display Name", value=member.display_name, inline=False)
 
         # JOIN DATE
         days = str(datetime.datetime.utcnow() - member.created_at).split(" ")[0]
@@ -211,7 +206,7 @@ class User_Management(commands.Cog):
         # NITRO SINCE
         if not member.premium_since is None:
             nitro_days = str(datetime.datetime.utcnow() - member.premium_since).split(" ")[0]
-            nitro_string = f"{member.premium_since.strftime('%Y-%m-%d')} ({days} days)"
+            nitro_string = f"{member.premium_since.strftime('%Y-%m-%d')} ({nitro_days} days)"
         else:
             nitro_string = "Not Boosting"
         embed.add_field(name="Nitro Since:", value=nitro_string, inline=False)
@@ -227,6 +222,14 @@ class User_Management(commands.Cog):
         embed.add_field(name="Roles:", value=", ".join([i.name for i in member.roles]), inline=True)
 
         await ctx.send(embed=embed)
+
+    @user_info.error
+    async def user_info_handler(self, ctx, error):
+        """A local Error Handler."""
+
+        # Check if our required argument inp is missing.
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Member not found.")
 
     @tasks.loop(minutes=15)
     # @tasks.loop(seconds=5)
