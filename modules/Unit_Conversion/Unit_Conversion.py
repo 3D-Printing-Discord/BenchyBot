@@ -27,7 +27,6 @@ class Unit_Conversion(commands.Cog):
             "gallon": ["l", 4.54609, 0],
             "mile":   ["km", 1.60934, 0],
             "pound per square inch": ["Bar", 0.0689476, 0],
-            "degree fahrenheit": ["C", 5/9, -32],
             "degree celsius":    ["F", 9/5, 32]
         }
 
@@ -85,6 +84,14 @@ class Unit_Conversion(commands.Cog):
                 embed.add_field(name="Currency Conversion:", value=conversions_string, inline=False)
 
             # SPECIAL CASES
+            elif str(q.unit) == 'degree fahrenheit':
+                result = (q.value - 32) * (5/9)
+                output_unit = "C"
+
+                ouput_string = f"{q.value} {q.unit} = {result:.2f} {output_unit}"
+
+                embed.add_field(name="Unit Conversion:", value=ouput_string, inline=False)
+
             elif str(q.unit) == "attowatt gausses": # AWG
                 n = q.value
                 result = 0.127 * pow(92, ((36-n)/39))
