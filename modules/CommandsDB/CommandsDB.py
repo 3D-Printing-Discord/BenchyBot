@@ -188,7 +188,7 @@ class CommandsDB(commands.Cog):
     @commands.command()
     async def help_db(self, ctx):
         '''
-        Shows all databse commands
+        Shows all databse commands.
         '''
 
         await self.show_commands(ctx, 'help')

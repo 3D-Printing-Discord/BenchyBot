@@ -20,6 +20,7 @@ class Reddit(commands.Cog):
         #     self.config_data = json.load(f)
 
     @commands.command()
+    @commands.has_any_role(*bot_utils.reg_roles)
     async def reddit(self, ctx, subreddit='3dprinting'):
         '''Links and previews a subreddit.'''
 

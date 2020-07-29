@@ -16,6 +16,7 @@ class PCPart(commands.Cog):
             self.config_data = json.load(f)
 
     @commands.command()
+    @commands.has_any_role(*bot_utils.reg_roles)
     async def pcpart(self, ctx, *, table_info=None):
         '''Displays PCPartPicker build tables.'''
 

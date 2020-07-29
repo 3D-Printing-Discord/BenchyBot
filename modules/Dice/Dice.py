@@ -18,6 +18,7 @@ class Dice(commands.Cog):
         #     self.config_data = json.load(f)
 
     @commands.command()
+    @commands.has_any_role(*bot_utils.reg_roles)
     async def d20(self, ctx, *, d='1d6'):
         '''
         Rolls a dice using d20 syntax. Defaults to a single d6
@@ -38,6 +39,7 @@ class Dice(commands.Cog):
         await message.edit(embed=embed)
 
     @commands.command()
+    @commands.has_any_role(*bot_utils.reg_roles)
     async def roll(self, ctx, d='6'):
         '''
         Rolls a dice. Defaults to 1 d6

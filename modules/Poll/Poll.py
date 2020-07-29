@@ -19,7 +19,8 @@ class Poll(commands.Cog):
         # self.reacts_list = ['👍', '👎', '🤷‍♀️']
 
     @commands.command()
-    async def poll(self, ctx, *, topic="Poll:"):
+    @commands.has_any_role(*bot_utils.reg_roles)
+    async def poll(self, ctx, *, topic="Poll"):
         '''
         Creates an interactive poll.
         '''
