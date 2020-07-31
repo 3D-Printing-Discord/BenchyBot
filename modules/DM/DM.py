@@ -33,6 +33,7 @@ class DM(commands.Cog):
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def reply(self, ctx, member: discord.Member, *, message):
+        '''Used to reply to DMs through the bot.'''
         await ctx.message.delete()
         await member.send(f"Message from the mods:\n{message}")
         embed = discord.Embed(title="Direct Message Response Sent", color=bot_utils.yellow)
@@ -44,6 +45,7 @@ class DM(commands.Cog):
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
     async def page(self, ctx, *, message):
+        '''Used to alert the mods. Please use in a regs channel.'''
         embed = discord.Embed(title=f"{ctx.author} is requesting assistance!", color=bot_utils.red)
         embed.add_field(name="Message", value=message, inline=False)
         await ctx.guild.get_channel(self.config_data["bot_mail_channel"]).send("@here", embed=embed)
