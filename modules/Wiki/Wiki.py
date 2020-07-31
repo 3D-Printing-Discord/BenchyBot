@@ -52,7 +52,7 @@ class Wiki(commands.Cog):
     @commands.has_any_role(*bot_utils.reg_roles)
     async def add_wiki_access(self, ctx, username=None):
         '''
-        Adds a github account as a collaborator to the wiki so that you can edit pages.
+        Adds a github account as a collaborator to the wiki so that you can edit pages. Please use this to add your own account only.
         '''
 
         if username==None:
@@ -69,7 +69,18 @@ class Wiki(commands.Cog):
         self.conn.commit()
 
     @commands.command()
-    @commands.has_any_role(*bot_utils.reg_roles)
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def wiki_info(self, ctx):
+        files = os.listdir("runtimefiles/wiki_repo")
+        files = [i for i in files if not i.startswith('_')]
+
+        embed=discord.Embed(title='Wiki Info', colour=bot_utils.blue)
+        embed.add_field(name="Pages", value=len(files), inline=False)
+
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def wiki_who(self, ctx, username=None):
         '''Displays discord users github names.'''
         # GET DATABASE RESULTS
