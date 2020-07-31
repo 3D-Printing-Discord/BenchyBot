@@ -33,7 +33,15 @@ class Moderation(commands.Cog):
             warn_mesg = await ctx.send(member.mention, embed=embed)
             self.c.execute("INSERT INTO Moderation_warnings(timestamp, user_id, reason, jump_link) VALUES (?, ?, ?, ?)", (datetime.datetime.utcnow(), member.id, rule_number, warn_mesg.jump_url))
             self.conn.commit()
-            await ctx.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Warning issued to {member}.\n{warn_mesg.jump_url}")
+
+            log_embed = discord.Embed(title="Warning Issued", color=bot_utils.red)
+            log_embed.set_footer(text=f"Issued by: {ctx.author}")
+
+            log_embed.add_field(name="Issued to", value=f"{member} [{member.mention}]", inline=False)
+            log_embed.add_field(name="Reason", value=f"Rule {rule_number}", inline=False)
+            log_embed.add_field(name="Link", value=f"[Jump link]({warn_mesg.jump_url})", inline=False)
+
+            await ctx.guild.get_channel(self.bot.config['bot_log_channel']).send(embed=log_embed)
         else:
             await ctx.send(embed=embed)
 
@@ -61,6 +69,27 @@ class Moderation(commands.Cog):
         out_string = "\n".join(output)
 
         await ctx.send(f"{len(results)} warning(s) recorded for {member}\n```\n{out_string}```")
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, RawReactionActionEvent):
+        message = await self.bot.get_guild(RawReactionActionEvent.guild_id).get_channel(RawReactionActionEvent.channel_id).fetch_message(RawReactionActionEvent.message_id)
+
+        if not any(role.id in bot_utils.admin_roles for role in RawReactionActionEvent.member.roles):
+            return
+
+        if 'delete' in str(RawReactionActionEvent.emoji):
+            embed = discord.Embed(title="Message Removed", color=bot_utils.red)
+            embed.set_footer(text=f"Deleted by: {RawReactionActionEvent.member}")
+
+            embed.add_field(name="Author", value=f"{message.author} [{message.author.mention}]", inline=False)
+            embed.add_field(name="Channel", value=message.channel.mention, inline=False)
+            embed.add_field(name="Sent at", value=message.created_at, inline=False)
+            embed.add_field(name="Content", value=message.clean_content, inline=False)
+            embed.add_field(name="Attachments", value=len(message.attachments), inline=False)
+
+            await self.bot.get_guild(RawReactionActionEvent.guild_id).get_channel(self.bot.config['bot_log_channel']).send(embed=embed, files=[await i.to_file() for i in message.attachments])
+
+            await message.delete()  
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
