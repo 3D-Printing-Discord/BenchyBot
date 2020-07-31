@@ -16,7 +16,7 @@ class Bot_Management(commands.Cog):
         # with open('modules/Bot_Management/config.json') as f:
             # self.config_data = json.load(f)
 
-    @commands.command(hidden=True)
+    @commands.command()
     @commands.check(bot_utils.is_admin)
     async def info(self, ctx):
         '''
@@ -38,7 +38,7 @@ class Bot_Management(commands.Cog):
 
         await ctx.send('```To load modules use:   load_module [module name]\nTo unload modules use: unload_module [module name]\nTo reload modules use: reload_module [module name]\n```', embed=embed)
 
-    @commands.command(hidden=True)
+    @commands.command()
     @commands.check(bot_utils.is_admin)
     async def unload_module(self, ctx, module):
         """Unloads modules from the bot."""
@@ -52,7 +52,7 @@ class Bot_Management(commands.Cog):
             except:
                 await ctx.send(f"ERROR: Cannot unload {module}!")
 
-    @commands.command(hidden=True)
+    @commands.command()
     @commands.check(bot_utils.is_admin)
     async def load_module(self, ctx, module):
         """Loads modules to the bot."""
@@ -66,7 +66,7 @@ class Bot_Management(commands.Cog):
             except:
                 await ctx.send(f"ERROR: Cannot load {module}!")
 
-    @commands.command(hidden=True)
+    @commands.command()
     @commands.check(bot_utils.is_admin)
     async def reload_module(self, ctx, module):
         """Reloads bot modules."""
@@ -81,7 +81,7 @@ class Bot_Management(commands.Cog):
             except:
                 await ctx.send(f"ERROR: Cannot load {module}!")
             
-    @commands.command(hidden=True)
+    @commands.command()
     @commands.check(bot_utils.is_admin)
     async def debug_load_module(self, ctx, module):
         """Loads modules with full console debug"""
