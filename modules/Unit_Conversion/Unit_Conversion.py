@@ -59,6 +59,7 @@ class Unit_Conversion(commands.Cog):
 
         embed=discord.Embed(title=" ")
 
+        react_emoji = '📝'
         for q in quants:
             if str(q.unit) in self.measures.keys():
                 conversion_units = self.measures[str(q.unit)]
@@ -68,6 +69,8 @@ class Unit_Conversion(commands.Cog):
                 ouput_string = f"{q.value} {q.unit} = {result:.2f} {output_unit}"
 
                 embed.add_field(name="Unit Conversion:", value=ouput_string, inline=False)
+
+                react_emoji = '📏'
 
             elif str(q.unit) in self.currencies.keys():
                 c = CurrencyConverter()
@@ -83,6 +86,8 @@ class Unit_Conversion(commands.Cog):
                 conversions_string = "\n".join(output_strings)
                 embed.add_field(name="Currency Conversion:", value=conversions_string, inline=False)
 
+                react_emoji = '💵'
+
             # SPECIAL CASES
             elif str(q.unit) == 'degree fahrenheit':
                 result = (q.value - 32) * (5/9)
@@ -92,6 +97,8 @@ class Unit_Conversion(commands.Cog):
 
                 embed.add_field(name="Unit Conversion:", value=ouput_string, inline=False)
 
+                react_emoji = '🌡️'
+
             elif str(q.unit) == "attowatt gausses": # AWG
                 n = q.value
                 result = 0.127 * pow(92, ((36-n)/39))
@@ -100,13 +107,17 @@ class Unit_Conversion(commands.Cog):
                 ouput_string = f"{q.value} AWG = {result:.4f} Ømm\n{q.value} AWG = {result_area:.4f} mm2"
                 embed.add_field(name="Unit Conversion:", value=ouput_string, inline=False)
 
+                react_emoji = '🔌'
+
             elif str(q.unit) == 'year': # Years to seconds (regs only)
                 if message.channel.id == 260957117412802561:
-                    output_string = f"{12 * q.value} months\n{365 * q.value} days\n{525600 * q.value} minutes\n{31536000 * q.value} seconds"
-                    embed.add_field(name="xkuyax wanted everyone to know:", value=output_string, inline=False)
+                    output_string = f"**{q.value} years is:**\n{12 * q.value} months\n{365 * q.value} days\n{525600 * q.value} minutes\n{31536000 * q.value} seconds"
+                    embed.add_field(name="xkuyax wanted this key feature:", value=output_string, inline=False)
+
+                    react_emoji = '📆'
 
         if len(embed.fields) > 0:
-            send_embed, user = await bot_utils.await_react_confirm(message, self.bot, emoji='📝', confirm_time=300)
+            send_embed, user = await bot_utils.await_react_confirm(message, self.bot, emoji=react_emoji, confirm_time=300)
             if send_embed:
                 embed.set_footer(text=f"Conversion Requested By: {user}")
                 await message.channel.send(embed=embed)
