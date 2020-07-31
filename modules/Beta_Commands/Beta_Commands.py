@@ -58,6 +58,7 @@ class Beta_Commands(commands.Cog):
 
     @commands.command()
     async def add_printer(self, ctx, *, printer):
+        '''Beta Command: Adds a printer to your name.'''
         print("Edit Name")
         nick_string = f"{ctx.author.name} | {printer}"
         if len(nick_string) > 32:
