@@ -17,7 +17,7 @@ class DM(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if(message.guild == None) and (message.author != self.bot.user):
+        if(message.guild == None) and (message.author != self.bot.user) and not (message.content.startswith("?")):
             # BUILD EMBED
             embed = discord.Embed(title="Direct Message Received", color=bot_utils.yellow)
             embed.add_field(name="Sender", value=message.author.mention, inline=False)
