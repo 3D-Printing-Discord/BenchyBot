@@ -35,9 +35,9 @@ class SelfPromotion(commands.Cog):
                 try:
                     await message.author.send(self.config_data['delete_message'])
                     await message.author.send(f"Reason for deletion:```\nSelf promotion messages must be under {self.config_data['post_threshold']}%. Current: {promotion_per:.2f}%")
-                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to excessive self promotion (`{promotion_per}%`)\nDM Sent Successfully.\n```{message.content}```")
+                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to excessive self promotion (`{promotion_per:.2f}%`)\nDM Sent Successfully.\n```{message.content}```")
                 except:
-                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to excessive self promotion (`{promotion_per}%`)\nDM **Failed To Send**.\n```{message.content}```")
+                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to excessive self promotion (`{promotion_per:.2f}%`)\nDM **Failed To Send**.\n```{message.content}```")
             
             # SERVER AGE
             days_on_server = (datetime.datetime.utcnow() - message.author.joined_at).days
