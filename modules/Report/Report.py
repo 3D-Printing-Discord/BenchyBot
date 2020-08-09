@@ -22,7 +22,7 @@ class Report(commands.Cog):
             target_channel = self.bot.get_channel(self.config_data["report_channel"])
 
             embed = discord.Embed(title="Report Received", description=f"{reaction.message.jump_url}\n```        BY: {user.name}\n   OF USER: {reaction.message.author.name}\n       FOR: \"{reaction.message.content}\"\nCREATED AT: {reaction.message.created_at}\n        IN: #{reaction.message.channel.name}```", color=bot_utils.red)
-            await target_channel.send(embed=embed)
+            await target_channel.send('@here', embed=embed)
 
             await reaction.remove(user)
             
