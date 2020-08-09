@@ -40,7 +40,10 @@ class Poll(commands.Cog):
         await sent_message.add_reaction('👎')
         await sent_message.add_reaction('🤷‍♀️')
 
+
         self.messages[int(sent_message.id)] = topic
+
+        await sent_message.pin()
 
         if DEBUG: print("Going to sleep")
         await asyncio.sleep(args['time']*60)
@@ -50,6 +53,7 @@ class Poll(commands.Cog):
 
         await sent_message.clear_reactions()
         await sent_message.edit(content=f"**{topic}**\n{result}`CLOSED`")
+        await sent_message.unpin()
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, RawReactionActionEvent):
@@ -124,9 +128,7 @@ class Poll(commands.Cog):
 
     def build_percent_string(self, percent):
         output = str(round(percent*100))
-
         output = " "*(3-len(output)) + output
-
         return(output)
 
 def setup(bot):
