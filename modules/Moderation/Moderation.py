@@ -19,6 +19,12 @@ class Moderation(commands.Cog):
         self.conn = sqlite3.connect(self.bot.config['database'])
         self.c = self.conn.cursor()
 
+    @commands.Cog.listener()
+    async def on_member_ban(guild, user):
+
+       target_channel = guild.get_channel(self.bot.config['bot_log_channel'])
+       target_channel.send(f"{user} was just banned! (I think)")
+
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def rule(self, ctx, rule_number, member: discord.Member =None):
