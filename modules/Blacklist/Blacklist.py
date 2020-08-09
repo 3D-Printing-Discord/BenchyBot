@@ -19,28 +19,31 @@ class Blacklist(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.author == self.bot.user:
+            return
+
+        if any(r.id in bot_utils.admin_roles for r in message.author.roles):
+            return
+
         self.c.execute("SELECT * FROM Blacklist")
         banned_terms = self.c.fetchall()
 
         # Delete messages
-        if message.author != self.bot.user:
-            for s in banned_terms:
-                if s[0] in message.content.lower():
-                    await message.delete()
+        for s in banned_terms:
+            if s[0] in message.content.lower():
+                await message.delete()
 
-                    if self.config_data["blacklist_message"] != "":
-                        await message.author.send(self.config_data["blacklist_message"])
+                if self.config_data["blacklist_message"] != "":
+                    await message.author.send(self.config_data["blacklist_message"])
 
-                    embed=discord.Embed(title="Blacklist Message Removed", description=f"Message: '{message.content}'\n     By: {message.author.mention}\n     In: {message.channel.mention}", color=bot_utils.red)
-                    await self.bot.get_channel(self.bot.config['bot_log_channel']).send(embed=embed)
+                embed=discord.Embed(title="Blacklist Message Removed", description=f"Message: '{message.content}'\n     By: {message.author.mention}\n     In: {message.channel.mention}", color=bot_utils.red)
+                await self.bot.get_channel(self.bot.config['bot_log_channel']).send(embed=embed)
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def add_banned_term(self, ctx, term):
         """Adds blacklisted terms to the database"""
         term = term.lower()
-
-        print(f"[!] Adding {term} to databse!")
 
         try:
             self.c.execute("INSERT INTO Blacklist(term) VALUES (?)", (term,))
@@ -53,7 +56,6 @@ class Blacklist(commands.Cog):
     @commands.has_any_role(*bot_utils.admin_roles)
     async def remove_banned_term(self, ctx, term):
         """Removes blacklisted terms from the database"""
-        print(f"[!] Removing {term} from databse!")
         # Load blacklist terms
         try:
             self.c.execute("DELETE FROM Blacklist WHERE term=?", (term,))
