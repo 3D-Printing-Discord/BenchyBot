@@ -5,6 +5,16 @@ import json
 import asyncio
 import random
 import bot_utils
+import re
+
+COMBO = '''
+   _____                _           _ 
+  / ____|              | |         | |
+ | |     ___  _ __ ___ | |__   ___ | |
+ | |    / _ \| '_ ` _ \| '_ \ / _ \| |
+ | |___| (_) | | | | | | |_) | (_) |_|
+  \_____\___/|_| |_| |_|_.__/ \___/(_)
+  '''
 
 class Yeet(commands.Cog):
     version = "v0.1"
@@ -21,10 +31,12 @@ class Yeet(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.channel.id == 730178093444104272:
-            if "yeet" in message.content.lower() and message.author.id != self.bot.user.id:
+            x = re.findall('(Y|y)(e|E){2,}(T|t)', message.content)
+            if x and message.author.id != self.bot.user.id:
                 await message.add_reaction(":yeet:730210956793086034")
-                # await message.channel.send("Thats a yeet!")
-                self.yeets = self.yeets + 1
+                self.yeets = self.yeets + len(x)
+                if len(x) > 1:
+                    await message.channel.send(f"```{COMBO}```")
 
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
