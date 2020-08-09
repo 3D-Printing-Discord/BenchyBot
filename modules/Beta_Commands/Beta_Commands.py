@@ -7,18 +7,66 @@ import random
 import bot_utils
 import py7zr
 import shutil
+import requests
+import re
 
 DEBUG = False
+
+COMBO = '''
+   _____                _           _ 
+  / ____|              | |         | |
+ | |     ___  _ __ ___ | |__   ___ | |
+ | |    / _ \| '_ ` _ \| '_ \ / _ \| |
+ | |___| (_) | | | | | | |_) | (_) |_|
+  \_____\___/|_| |_| |_|_.__/ \___/(_)
+  '''
 
 class Beta_Commands(commands.Cog):
     version = "v0.1"
 
     def __init__(self, bot):
         self.bot = bot
+        self.yeets = 0
 
         # self.config_data = []
         # with open('modules/Beta_Commands/config.json') as f:
         #     self.config_data = json.load(f)
+
+    # @commands.Cog.listener()
+    # async def on_message(self, message):
+        
+    #     if message.content.startswith("^nrolelist"):
+    #         await message.channel.send("Hello,\n\nBecause there is a limit on the max number of roles, we are unable to continue adding each new printer that releases. We will be restructuring printer roles in the future so stay tuned!")
+
+    #     if message.channel.id == 339978089411117076:
+    #         if len(message.content) > 280:
+    #             await message.delete()
+
+    #             API_KEY = 'AxTd4eNGF4vhXT8MUoJD-BkOVUMsJN-r'
+    #             import requests 
+
+    #             url = 'https://pastebin.com/api/api_post.php'
+    #             data = {
+    #                 'api_dev_key':'AxTd4eNGF4vhXT8MUoJD-BkOVUMsJN-r',
+    #                 'api_option':'paste',
+    #                 'api_paste_code':message.content
+    #                 }
+
+    #             r = requests.post(url, data=data)
+    #             print(r.content)
+                
+    #             embed = discord.Embed(title=f"{message.author} (Shortened Message)", description=f"{message.content[:280]}...\n\n[Read Full Message]({r.content.decode('utf-8')})")
+    #             await message.channel.send(embed=embed)
+
+
+    # @commands.Cog.listener()
+    # async def on_message(self, message):
+    #     x = re.findall('(Y|y)(e|E){2,}(T|t)', message.content)
+    #     if x and message.author.id != self.bot.user.id:
+    #         await message.add_reaction(":yeet:730210956793086034")
+    #         self.yeets = self.yeets + len(x)
+    #         if len(x) > 1:
+    #             await message.channel.send(f"```{COMBO}```")
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -42,6 +90,29 @@ class Beta_Commands(commands.Cog):
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
+    async def ban_log(self, ctx):
+
+        if not ctx.channel.id == 339978089411117076:
+            return
+
+        bans = await ctx.guild.bans()
+
+        # CREATE PAGINATOR
+        paginator = commands.Paginator(prefix='```\n', suffix='\n```')
+        paginator.add_line(f'--- BANS ({len(bans)}) ---')
+
+        # ADD COMMANDS TO PAGINATOR
+        for i in bans:
+            reason = str(i.reason).strip('\n')
+            newline = '\n'
+            paginator.add_line(f"{i.user.name} : {reason}{newline}")
+
+        # SEND PAGINATOR
+        for page in paginator.pages:
+            await ctx.send(page, delete_after=300)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def backup(self, ctx):
         pass
         print("Copying files")
@@ -59,13 +130,30 @@ class Beta_Commands(commands.Cog):
     @commands.command()
     async def add_printer(self, ctx, *, printer):
         '''Beta Command: Adds a printer to your name.'''
-        print("Edit Name")
         nick_string = f"{ctx.author.name} | {printer}"
         if len(nick_string) > 32:
             await ctx.send("Name string too long.")
         else:
             await ctx.author.edit(nick=nick_string)
             await ctx.send("Done.")
+
+    @add_printer.error
+    async def add_printer_handler(self, ctx, error):
+        """Local Error Handler For add_printer."""
+
+        # Check if our required argument inp is missing.
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("You need to provide a printer name. Use the command like this (no [ ] needed):\n`?add_printer [Printer Name]`")
+
+    @commands.command()
+    @commands.check(bot_utils.is_admin)
+    async def set_status(self, ctx, *, status):
+        # activity = discord.CustomActivity("Test")¶
+        # self.bot.change_presence()
+
+        activity=discord.Activity(type=discord.ActivityType.listening, name=status)
+        # activity = discord.Game(status)
+        await self.bot.change_presence(activity=activity)
 
     # @commands.Cog.listener()
     # async def on_message(self, message):
