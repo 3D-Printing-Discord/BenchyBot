@@ -20,7 +20,7 @@ class DM(commands.Cog):
         if(message.guild == None) and (message.author != self.bot.user) and not (message.content.startswith("?")):
             # BUILD EMBED
             embed = discord.Embed(title="Direct Message Received", color=bot_utils.yellow)
-            embed.add_field(name="Sender", value=message.author.mention, inline=False)
+            embed.add_field(name="From", value=f"{message.author.mention} [{message.author}]", inline=False)
             embed.add_field(name="Message", value=message.content, inline=False)
 
             # SEND EMBED TO CHANNEL
@@ -35,9 +35,13 @@ class DM(commands.Cog):
     async def reply(self, ctx, member: discord.Member, *, message):
         '''Used to reply to DMs through the bot.'''
         await ctx.message.delete()
+
+        if not await bot_utils.await_confirm(ctx, f"**Send the following message to {member.mention}:**\n```\n{message}```", confirm_time=60):
+            return
+
         await member.send(f"Message from the mods:\n{message}")
         embed = discord.Embed(title="Direct Message Response Sent", color=bot_utils.yellow)
-        embed.add_field(name="To", value=member, inline=False)
+        embed.add_field(name="To", value=f"{member.mention} [{member}]", inline=False)
         embed.add_field(name="Content", value=message, inline=False)
         embed.set_footer(text=f"Sent by: {ctx.author}")
         await ctx.guild.get_channel(self.config_data["bot_mail_channel"]).send(embed=embed)
