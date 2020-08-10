@@ -51,9 +51,9 @@ class Poll(commands.Cog):
     
         del self.messages[sent_message.id]
 
-        await sent_message.clear_reactions()
         await sent_message.edit(content=f"**{topic}**\n{result}`CLOSED`")
         await sent_message.unpin()
+        await sent_message.clear_reactions()
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, RawReactionActionEvent):
