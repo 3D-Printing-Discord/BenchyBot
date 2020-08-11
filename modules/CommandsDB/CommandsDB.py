@@ -9,6 +9,7 @@ import difflib
 import time
 import asyncio
 import csv
+import datetime
 
 import bot_utils
 
@@ -256,7 +257,7 @@ class CommandsDB(commands.Cog):
         try:
             # ADD COMMAND TO THE DATABASE
             self.c.execute("DELETE FROM Commands WHERE command=? AND command_type=?", (command, command_type))
-            self.c.execute("INSERT INTO Commands(command, response, command_type) VALUES (?, ?, ?)", (command.strip('```'), response, command_type))
+            self.c.execute("INSERT INTO Commands(command, response, command_type, owner, timestamp) VALUES (?, ?, ?, ?, ?)", (command.strip('```'), response, command_type, ctx.author.id, datetime.datetime.utcnow()))
             self.conn.commit()
             await ctx.send(f"New {command_type} command: '{command}'':\n{response}")
 
