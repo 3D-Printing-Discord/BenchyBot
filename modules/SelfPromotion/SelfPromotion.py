@@ -23,33 +23,34 @@ class SelfPromotion(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        self.c.execute("INSERT INTO SelfPromotion(user_id, date, channel) VALUES (?, ?, ?)", (message.author.id, message.created_at, message.channel.id))
-        self.conn.commit()
 
         if message.channel.id == self.config_data['promotion_channel']:
 
-            # PROMOTION PERCENTAGE 
             promotion_per = self.calc_percentage(message.author)*100
-            if promotion_per > self.config_data['post_threshold']:
-                await message.delete()
-                try:
-                    await message.author.send(self.config_data['delete_message'])
-                    await message.author.send(f"Reason for deletion:```\nSelf promotion messages must be under {self.config_data['post_threshold']}%. Current: {promotion_per:.2f}%")
-                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to excessive self promotion (`{promotion_per:.2f}%`)\nDM Sent Successfully.\n```{message.content}```")
-                except:
-                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to excessive self promotion (`{promotion_per:.2f}%`)\nDM **Failed To Send**.\n```{message.content}```")
-            
-            # SERVER AGE
+            check_promotion = promotion_per > self.config_data['post_threshold']
+            promotion_error = f"Self promotion messages must be under {self.config_data['post_threshold']}%. Current: {promotion_per:.2f}%"
+
             days_on_server = (datetime.datetime.utcnow() - message.author.joined_at).days
-            if days_on_server < self.config_data['age_min']:
+            check_days = days_on_server < self.config_data['age_min']
+            days_error = f"Your account must be over {self.config_data['age_min']} days. Current: {days_on_server} days"
+
+            formatted_reason = ((promotion_error + '\n' + days_error) * (check_promotion and check_days)) + (promotion_error * check_promotion + days_error * check_days) * (not (check_promotion and check_days))
+
+            if check_promotion or check_days:
                 await message.delete()
                 try:
-                    await message.author.send(self.config_data['delete_message'])
-                    await message.author.send(f"Reason for deletion:```\nYour account must be over {self.config_data['age_min']} days. Current: {days_on_server} days")
-                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to account age (`{days_on_server} days old`)\nDM Sent Successfully.\n```{message.content}```")
+                    await message.author.send(self.config_data['delete_message'] + '\n\nReason for deletion:\n' + formatted_reason)
+                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to:\n{formatted_reason}\nDM Sent Successfully.\n```{message.content}```"[:1800])
                 except:
-                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to account age (`{days_on_server} days old`)\nDM **Failed To Send**.\n```{message.content}```")
-            
+                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to :\n{formatted_reason}\nDM **Failed To Send DM**.\n```{message.content}```"[:1800])
+
+            else:
+                self.c.execute("INSERT INTO SelfPromotion(user_id, date, channel) VALUES (?, ?, ?)", (message.author.id, message.created_at, message.channel.id))
+                self.conn.commit()
+
+        else:
+            self.c.execute("INSERT INTO SelfPromotion(user_id, date, channel) VALUES (?, ?, ?)", (message.author.id, message.created_at, message.channel.id))
+            self.conn.commit()
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
