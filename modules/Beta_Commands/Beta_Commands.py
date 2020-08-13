@@ -144,6 +144,7 @@ class Beta_Commands(commands.Cog):
         # Check if our required argument inp is missing.
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send("You need to provide a printer name. Use the command like this (no [ ] needed):\n`?add_printer [Printer Name]`")
+            ctx.handled_in_local = True
 
     @commands.command()
     @commands.check(bot_utils.is_admin)

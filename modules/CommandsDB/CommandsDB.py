@@ -31,14 +31,9 @@ class CommandsDB(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-
+        
         # IF NOT COMMAND NOT FOUND ERROR
         if not isinstance(error, commands.CommandNotFound):
-
-            # RETURN TRACEBACK OF OTHER ERRORS
-            print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
-            traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-
             return
 
         # EXTRACT ARGS
@@ -93,6 +88,7 @@ class CommandsDB(commands.Cog):
             await ctx.send(embed=embed)
         else:
             await ctx.send(bot_utils.sanitize_input(response))
+            ctx.handled_in_local = True
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
