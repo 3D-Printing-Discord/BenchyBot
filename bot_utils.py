@@ -3,6 +3,7 @@ from datetime import datetime
 import asyncio
 import difflib
 import shlex
+import sqlite3
 
 # ---------- STANDARDISED COLOURS ----------
 blue = 0x89cff0
@@ -21,6 +22,8 @@ async def is_admin(ctx):
     """
     Checks if user is an admin. This function is depreciated and will be removed in a future version.
     """
+    print(f"{ctx.command} is using a legacy check that will become depreciated soon!!!")
+
     roles = ctx.bot.config['admin_roles']
 
     for role_id in roles:
@@ -33,6 +36,8 @@ async def is_mod(ctx):
     """
     Checks if user is a mod. This function is depreciated and will be removed in a future version.
     """
+    print(f"{ctx.command} is using a legacy check that will become depreciated soon!!!")
+
     roles = ctx.bot.config['admin_roles'] + ctx.bot.config['mod_roles']
 
     for role_id in roles:
@@ -77,6 +82,59 @@ async def bot_log(bot, log):
         channel = bot.get_channel(695039236117889054)
         await channel.send(f"{log}")
 
+async def log(bot, title="Log", author=None, description=None, color=blue, **kwargs):
+    embed=discord.Embed(title=title, description=description, color=color)
+
+    for k, v in kwargs.items():
+        embed.add_field(name=k, value=v, inline=False)
+
+    log_message = await bot.get_channel(bot.config['bot_log_channel']).send(embed=embed)
+
+    await log_message.add_reaction('📩')
+
+async def await_mod_confirm(ctx, message, delete_after=True, confirm_time=10):
+    '''
+    Sends a message and waits for confirmation. 
+    '''
+
+    target_channel = ctx.bot.get_channel(ctx.bot.config['bot_log_channel'])
+
+    # SEND THE SUGGESTIONS
+    sent_message = await target_channel.send(message)
+
+    # ADD THE CONFIRM EMOJI
+    await sent_message.add_reaction('👍')
+    await sent_message.add_reaction('👎')
+
+    # DEF CHECK OF RESPONSE
+    def check(reaction, user):
+        return reaction.message.id == sent_message.id and user.id != ctx.bot.user.id
+
+    # AWAIT AND HANDLE RESPONSE
+    try:
+        reaction, user = await ctx.bot.wait_for('reaction_add', timeout=confirm_time, check=check)
+        if delete_after:
+            await sent_message.delete()
+        else:
+            await sent_message.edit(content=f"{message}\n`CONFIRMED`")
+            await sent_message.clear_reactions()
+
+        if str(reaction.emoji) == '👍':
+            return True
+        else:
+            await sent_message.edit(content=f"{message}\n`REJECTED`")
+            await sent_message.clear_reactions()
+            return False
+
+    except asyncio.TimeoutError:
+        # CLEAN UP
+        if delete_after:
+            await sent_message.delete()
+        else:
+            await sent_message.edit(content=f"{message}\n`CANCELLED`")
+            await sent_message.clear_reactions()
+        return False
+
 async def await_confirm(ctx, message, delete_after=True, confirm_time=10):
     '''
     Sends a message and waits for confirmation. 
@@ -90,7 +148,7 @@ async def await_confirm(ctx, message, delete_after=True, confirm_time=10):
 
     # DEF CHECK OF RESPONSE
     def check(reaction, user):
-        return user == ctx.message.author and str(reaction.emoji) == '👍'
+        return user == ctx.message.author and str(reaction.emoji) == '👍' and sent_message.id == reaction.message.id
 
     # AWAIT AND HANDLE RESPONSE
     try:
@@ -110,6 +168,39 @@ async def await_confirm(ctx, message, delete_after=True, confirm_time=10):
             await sent_message.edit(content=f"{message}\n`CANCELLED`")
             await sent_message.clear_reactions()
         return False
+
+async def request_text(bot, channel, member, message, timeout=60):
+
+        request_message = await channel.send(message)
+        await request_message.add_reaction('❌')
+
+        def message_check(m):
+            return m.author == member and m.channel == channel
+
+        def reaction_check(reaction, user):
+            return str(reaction.emoji) == '❌' and user != bot.user and request_message.id == reaction.message.id 
+            
+        done, pending = await asyncio.wait([
+                        bot.wait_for('message', check=message_check, timeout=timeout),
+                        bot.wait_for('reaction_add', check=reaction_check, timeout=timeout)
+                    ], return_when=asyncio.FIRST_COMPLETED)
+
+        try:
+            return_object = done.pop().result()
+        except:
+            exception = done.pop().exception()
+            return_object = False
+
+        for future in pending:
+            future.cancel()
+
+        await request_message.delete()
+
+        if type(return_object) == discord.message.Message:
+            await return_object.delete()
+            return return_object.content
+        else:
+            return False
 
 async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60, delete_after=True):
     '''
