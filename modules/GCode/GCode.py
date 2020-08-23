@@ -25,7 +25,9 @@ class GCode(commands.Cog):
         self.c = self.conn.cursor()
 
     @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def _update_marlin_database(self, ctx):
+        '''Refreshes the internal marlin database.'''
 
         async with ctx.typing():
 
@@ -71,6 +73,7 @@ class GCode(commands.Cog):
 
     @commands.command()
     async def mg(self, ctx, *, request):
+        '''Used to search Marlin Gcode Commands.'''
 
         request = request.lower()
 
@@ -104,12 +107,14 @@ class GCode(commands.Cog):
             await ctx.send("Im sorry, I dont know that one!")
             return
 
-        print(name)
+        # print(name)
 
         self.c.execute("SELECT * FROM GCode WHERE flavour='marlin' AND command=?", (name, ))
         result = self.c.fetchone()
+        self.c.close()
+        self.c = self.conn.cursor()
 
-        print(result)
+        # print(result)
 
         lookup = result[1]
 
