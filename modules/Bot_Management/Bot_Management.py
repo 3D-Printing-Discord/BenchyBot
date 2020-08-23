@@ -17,7 +17,7 @@ class Bot_Management(commands.Cog):
             # self.config_data = json.load(f)
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def info(self, ctx):
         '''
         Provides info on the bot status.
@@ -39,7 +39,7 @@ class Bot_Management(commands.Cog):
         await ctx.send('```To load modules use:   load_module [module name]\nTo unload modules use: unload_module [module name]\nTo reload modules use: reload_module [module name]\n```', embed=embed)
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def unload_module(self, ctx, module):
         """Unloads modules from the bot."""
         if module == "Bot_Management":
@@ -53,7 +53,7 @@ class Bot_Management(commands.Cog):
                 await ctx.send(f"ERROR: Cannot unload {module}!")
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def load_module(self, ctx, module):
         """Loads modules to the bot."""
         if module == "Bot_Management":
@@ -67,7 +67,7 @@ class Bot_Management(commands.Cog):
                 await ctx.send(f"ERROR: Cannot load {module}!")
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def reload_module(self, ctx, module):
         """Reloads bot modules."""
         if module == "Bot_Management":
@@ -82,7 +82,7 @@ class Bot_Management(commands.Cog):
                 await ctx.send(f"ERROR: Cannot load {module}!")
             
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def debug_load_module(self, ctx, module):
         """Loads modules with full console debug"""
         print("Loading with debug")
