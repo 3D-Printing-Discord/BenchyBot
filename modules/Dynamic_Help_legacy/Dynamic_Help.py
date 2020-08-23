@@ -52,7 +52,7 @@ class Dynamic_Help(commands.Cog):
             self.help_channel_list[chan_id] = Help_Channel(self.bot, chan_id)
 
         for i in self.help_channel_list.values():
-            print(i)
+            if DEBUG: print(i)
 
         self.owner =     [None for i in self.config_data['help_channels']]
         self.pins =      [None for i in self.config_data['help_channels']]
