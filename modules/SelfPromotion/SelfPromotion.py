@@ -7,6 +7,16 @@ import random
 import bot_utils
 import sqlite3
 import math
+import re
+from urllib.parse import urlparse
+
+whitelist = [
+    "xkuyax.de:8090",
+    "www.aliexpress.com",
+    "www.thingiverse.com",
+    "cdn.discordapp.com",
+    "www.amazon.com"
+]
 
 class SelfPromotion(commands.Cog):
     version = "v0.1"
@@ -24,6 +34,9 @@ class SelfPromotion(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
 
+        if self.bot.user.id == message.author.id:
+            return
+
         if message.channel.id == self.config_data['promotion_channel']:
 
             promotion_per = self.calc_percentage(message.author)*100
@@ -37,20 +50,84 @@ class SelfPromotion(commands.Cog):
             formatted_reason = ((promotion_error + '\n' + days_error) * (check_promotion and check_days)) + (promotion_error * check_promotion + days_error * check_days) * (not (check_promotion and check_days))
 
             if check_promotion or check_days:
+
                 await message.delete()
+
                 try:
                     await message.author.send(self.config_data['delete_message'] + '\n\nReason for deletion:\n' + formatted_reason)
-                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to:\n{formatted_reason}\nDM Sent Successfully.\n```{message.content}```"[:1800])
+                    dm_status = "DM Sent Successfully"
                 except:
-                    await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Message from {message.author} removed in self-promotion due to :\n{formatted_reason}\nDM **Failed To Send DM**.\n```{message.content}```"[:1800])
+                    dm_status = "**DM Failed To Send**"
 
+                await bot_utils.log(self.bot, title="Self Promotion Message Removed", color=bot_utils.red, From=f"{message.author.mention} [{message.author}]", Message=f"```{message.content[:1000]}```", DM=dm_status, Reason=formatted_reason)
+            
             else:
-                self.c.execute("INSERT INTO SelfPromotion(user_id, date, channel) VALUES (?, ?, ?)", (message.author.id, message.created_at, message.channel.id))
-                self.conn.commit()
+                self.log_message(message)
+        else:
+            # CHECK FOR URLS 
+            urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', message.content)
 
+            if urls:
+                domain = urlparse(urls[0]).netloc # CONVERT TO DOMAIN
+
+                whitelist_items = self.bot.databasehandler.sqlquery('SELECT * FROM SelfPromotion_whitelist', return_type='all')
+                whitelist_items = [i[0] for i in whitelist_items]
+
+                if domain in whitelist_items:
+                    domain= None 
+
+                search_date = datetime.datetime.utcnow() - datetime.timedelta(days=30) 
+                self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND domain=? AND date>?", (message.author.id, domain, search_date))
+                links = self.c.fetchall()
+                
+                if len(links) > self.config_data['link_spam_threshold']:
+
+                    await bot_utils.log(self.bot, title="Anti Spam Triggered", color=bot_utils.yellow, From=f"{message.author.mention} [{message.author}]", Message=f"```{message.content[:1000]}```", Domain=domain, JumpLink=f"[Jump Link]({message.jump_url})", Occurences=len(links), Action=None)
+
+                self.log_message(message, domain=domain)
+            else:
+                self.log_message(message)
+
+    def log_message(self, message, domain=None):
+        # print(f"MESSAGE LOGGED: {message.content}")
+        if domain:
+            self.c.execute("INSERT INTO SelfPromotion(user_id, date, channel, domain) VALUES (?, ?, ?, ?)", (message.author.id, message.created_at, message.channel.id,domain))
+            self.conn.commit()
         else:
             self.c.execute("INSERT INTO SelfPromotion(user_id, date, channel) VALUES (?, ?, ?)", (message.author.id, message.created_at, message.channel.id))
             self.conn.commit()
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def selfpromotion_whitelist(self, ctx):
+        '''View the whitelist of sites for the self promotion module.'''
+        sites = self.bot.databasehandler.sqlquery('SELECT * FROM SelfPromotion_whitelist', return_type='all')
+
+        # CREATE PAGINATOR
+        paginator = commands.Paginator(prefix='```\n', suffix='\n```')
+        paginator.add_line(f'--- WHITELIST SITES ({len(sites)}) ---\nIf a message contains any of the following terms it will be allowed.\n---------------------------')
+
+        # ADD COMMANDS TO PAGINATOR
+        for s in sites:
+            paginator.add_line(f"{s[0]}")
+
+        # SEND PAGINATOR
+        for page in paginator.pages:
+            await ctx.send(page, delete_after=60)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def selfpromotion_whitelist_add(self, ctx, term):
+        '''Adds an entry to the self promotion whitelist.'''
+        if await bot_utils.await_confirm(ctx, f"Add '`{term}`' to the whitelist?", delete_after=False, confirm_time=60):
+            self.bot.databasehandler.sqlquery('INSERT INTO SelfPromotion_whitelist(site) VALUES (?)', term, return_type='commit')
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def selfpromotion_whitelist_remove(self, ctx, term):
+        '''Removes an entry from the self promotion whitelist.'''
+        if await bot_utils.await_confirm(ctx, f"Remove '`{term}`' from the whitelist?", delete_after=False, confirm_time=60):
+            self.bot.databasehandler.sqlquery('DELETE FROM SelfPromotion_whitelist WHERE site=?', term, return_type='commit')
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -116,7 +193,7 @@ class SelfPromotion(commands.Cog):
         sent_message = await ctx.send(f"Step {prog_count} of {len(ctx.guild.channels)}")
 
         search_limit = datetime.datetime.utcnow() - datetime.timedelta(days=30)
-        print(search_limit)
+        # print(search_limit)
         for c in ctx.guild.channels:
             prog_count += 1
             await sent_message.edit(content=self.gen_prog(prog_count, len(ctx.guild.channels)))
@@ -126,7 +203,7 @@ class SelfPromotion(commands.Cog):
                 async for m in c.history(after=search_limit, limit=150000, before=datetime.datetime.utcnow()):
                     self.c.execute("INSERT INTO SelfPromotion(user_id, date, channel) VALUES (?, ?, ?)", (m.author.id, m.created_at, m.channel.id))
                     self.conn.commit()
-            print(f"{c} : {count}")
+            # print(f"{c} : {count}")
 
         await ctx.send("Done!")
                 
