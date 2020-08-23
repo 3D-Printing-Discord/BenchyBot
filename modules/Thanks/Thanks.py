@@ -37,6 +37,8 @@ class Thanks(commands.Cog):
                 # Collect info from database 
                 self.c.execute("SELECT * FROM Thanks WHERE user_ID =?", (reaction.message.author.id,))
                 user_thanks = self.c.fetchone()
+                self.c.close()
+                self.c = self.conn.cursor()
                 if user_thanks == None: # if no info create new entry
                     self.c.execute(f"INSERT INTO Thanks VALUES ({reaction.message.author.id}, 1)")
                 else: # else + 1
@@ -48,6 +50,8 @@ class Thanks(commands.Cog):
         '''Shows the amount of thanks you have received'''
         self.c.execute("SELECT * FROM Thanks WHERE user_ID =?", (ctx.message.author.id,))
         user_thanks = self.c.fetchone()
+        self.c.close()
+        self.c = self.conn.cursor()
         if user_thanks == None:
             await ctx.send(f"{ctx.author.mention} has received 0 thanks!\n{self.config_data['check_message_none']}")
         else:
