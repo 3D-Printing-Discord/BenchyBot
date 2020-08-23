@@ -4,16 +4,23 @@ from discord.ext import commands
 import json
 import sys
 import traceback
+import bot_utils
 
 class ErrorHandler(commands.Cog):
     version = "v0.1"
 
     def __init__(self, bot):
         self.bot = bot
+        
+        self.report = True
 
-        self.config_data = []
-        with open('modules/ErrorHandler/config.json') as f:
-            self.config_data = json.load(f)
+        # self.config_data = []
+        # with open('modules/ErrorHandler/config.json') as f:
+        #     self.config_data = json.load(f)
+
+    # @commands.Cog.listener()
+    # async def on_command_error(self, error):
+    #     print(error)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -22,13 +29,35 @@ class ErrorHandler(commands.Cog):
         if hasattr(ctx, "handled_in_local"):
             return
 
-        # IGNORE SPECIFIC ERROR TYPES
+        # HANDLE SPECIFIC ERROR TYPES
         if isinstance(error, commands.CommandNotFound):
+            return
+        if isinstance(error, commands.CheckFailure):
+            await ctx.send(f"{ctx.author.mention} either you dont have permission to use `{ctx.prefix}{ctx.command}` or youre in the wrong channel!")
             return
 
         print("~~ Global Error Handler ~~~")
         print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+
+        if self.report:
+            traceback_formatted="".join(traceback.format_exception(type(error), error, error.__traceback__))
+            await ctx.bot.get_channel(ctx.bot.config['bot_log_channel']).send(f"```\n'Ignoring exception in command {ctx.command}\n{traceback_formatted}\n```")
+
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def toggle_errors(self, ctx):
+        '''
+        Enable or disable logging of bot errors to the audit log.
+        '''
+        if self.report:
+            self.report = False
+            await ctx.send('Error Reporting Disabled.')
+        else:
+            self.report = True 
+            await ctx.send('Error Reporting Enabled.')
+
 
 def setup(bot):
     bot.add_cog(ErrorHandler(bot))
