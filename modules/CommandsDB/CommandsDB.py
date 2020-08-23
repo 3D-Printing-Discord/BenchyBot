@@ -13,6 +13,8 @@ import datetime
 
 import bot_utils
 
+DEBUG = False
+
 class CommandsDB(commands.Cog):
     version = "v1.0"
 
@@ -31,64 +33,59 @@ class CommandsDB(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
+        if DEBUG: print("on_command_error")
         
         # IF NOT COMMAND NOT FOUND ERROR
         if not isinstance(error, commands.CommandNotFound):
             return
 
-        # EXTRACT ARGS
+        # EXTRACT COMMAND
         input_args = ctx.message.content.split(" ")
         input_command = input_args[0][1:]
+        if DEBUG: print("Command = ", input_command)
 
         # COLLECT COMMAND FROM DATABASE
         self.c.execute("SELECT * FROM Commands WHERE command=?", (input_command,))
-
-        # GET THE FIRST ONE RESULT
         command = self.c.fetchone()
+        self.c.close()
+        self.c = self.conn.cursor()
+        if DEBUG: print("Found = ", command)
 
         # CHECK COMMAND IS FOUND AND OFFER CORRECTION IF NOT
         if command == None:
+            if DEBUG: print("Command Not Found")
             new_command = await self.did_you_mean(ctx, input_command)
 
             if new_command:
                 # COLLECT COMMAND FROM DATABASE
                 self.c.execute("SELECT * FROM Commands WHERE command=?", (new_command,))
-
-                # GET THE FIRST ONE RESULT AND CORRECT THE COMMAND
                 command = self.c.fetchone()
+                self.c.close()
+                self.c = self.conn.cursor()
             else:
                 return
 
         # HANDLE ALIASES
         if command[2] == 'alias':
+            if DEBUG: print("Triggereing Alias")
             # COLLECT COMMAND FROM DATABASE
             self.c.execute("SELECT * FROM Commands WHERE command=?", (command[1],))
-
-            # GET THE FIRST ONE RESULT AND CORRECT THE COMMAND
             command = self.c.fetchone()
+            self.c.close()
+            self.c = self.conn.cursor()
+            if DEBUG: print("replacement command = ", command)
 
             if command == None:
                 await ctx.send("ERROR: Invalid Alias")
+                return
                    
         # GET RESPONSE
         response = command[1]
+        if DEBUG: print("Response = ", response)
 
-        flags, trimmed_response = bot_utils.simple_parse(response, embed='e', colour='c')
+        await self.send_command(ctx, response)
 
-        if flags['embed']:
-            if flags['colour'] == None:
-                flags['colour'] = bot_utils.green
-            else:
-                try:
-                    flags['colour'] = int(flags['colour'], 16)
-                except ValueError:
-                    flags['colour'] = bot_utils.green
-
-            embed = discord.Embed(title=flags['embed'], description=trimmed_response, color=flags['colour'])
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send(bot_utils.sanitize_input(response))
-            ctx.handled_in_local = True
+        if DEBUG: print("Done!")
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
@@ -96,6 +93,10 @@ class CommandsDB(commands.Cog):
     async def hc(self, ctx, command=None, *, response=None):
         '''
         Used to create / delete help commands.
+
+        Pass no arguments to view commands, pass a name to delete, and pass a name + response to crata command.
+
+        Prefix commands with `<>` to turn it into an embed supporitng markdown.
         '''
 
         if command == None:
@@ -113,7 +114,11 @@ class CommandsDB(commands.Cog):
     @commands.has_any_role(*bot_utils.admin_roles)
     async def cc(self, ctx, command=None, *, response=None):
         '''
-        Used to create / delete custom commands.
+        Used to create / delete custom commands. 
+        
+        Pass no arguments to view commands, pass a name to delete, and pass a name + response to crata command.
+
+        Prefix commands with `<>` to turn it into an embed supporitng markdown.
         '''
 
         if command == None:
@@ -243,19 +248,68 @@ class CommandsDB(commands.Cog):
 
         await ctx.send(f"Added {i} commands to the databse!")
 
+    @commands.command()
+    @commands.check(bot_utils.is_bot_channel)
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def commands_by(self, ctx, member: discord.Member):
+        '''Shows commands by a certain user.'''
+
+        # GET DATABASE COMMANDS
+        self.c.execute("SELECT * FROM Commands WHERE owner=?", (member.id, ))
+        result = sorted(self.c.fetchall())
+
+        # CREATE PAGINATOR
+        paginator = commands.Paginator(prefix='```\n', suffix='\n```')
+        paginator.add_line(f'--- DATABASE COMMANDS BY {member} ({len(result)}) ---')
+
+        # ADD COMMANDS TO PAGINATOR
+        for command in result:
+            paginator.add_line(command[0])
+
+        # SEND PAGINATOR
+        for page in paginator.pages:
+            await ctx.send(page)
+
     # -- HELPER FUNCTIONS --
+
+    def get_user_commands(self, member):
+        self.c.execute("SELECT * FROM Commands WHERE owner=?", (member.id, ))
+        result = self.c.fetchall()
+        return result
+
+    async def send_command(self, ctx, response, delete=True):
+        if response.startswith("<>"):
+            embed=discord.Embed(description=bot_utils.sanitize_input(response[2:]))
+            embed.set_footer(text=f"Sent by: {ctx.author}")
+            await ctx.send(embed=embed)
+            if delete:
+                await ctx.message.delete()
+        else:
+            await ctx.send(bot_utils.sanitize_input(response))
 
     async def add_command(self, ctx, command_type, command, response):
         """
         Adds a command to the database.
         """
 
+        if not await bot_utils.await_confirm(ctx, F"Create `?{command}`?\nPlease ensure that the command is inline with the command creation guidlines. View guidlines with `?command_creation`"):
+            await ctx.send("Command wasn't created.")
+            return
+
+        approval_message = await ctx.send("Thanks for your new command. It has been submitted for approval and should be live soon!")
+        if not await bot_utils.await_mod_confirm(ctx, f"**A command creation requires approval:**\nCommand: `?{command}`\nLink: {ctx.message.jump_url}", delete_after=False, confirm_time=21000):
+            await approval_message.edit(content=f"{ctx.author.mention} The command was not approved.")
+            return
+        else:
+            await approval_message.delete()
+
         try:
             # ADD COMMAND TO THE DATABASE
             self.c.execute("DELETE FROM Commands WHERE command=? AND command_type=?", (command, command_type))
             self.c.execute("INSERT INTO Commands(command, response, command_type, owner, timestamp) VALUES (?, ?, ?, ?, ?)", (command.strip('```'), response, command_type, ctx.author.id, datetime.datetime.utcnow()))
             self.conn.commit()
-            await ctx.send(f"New {command_type} command: '{command}'':\n{response}")
+            await ctx.send(f"{ctx.author.mention} New {command_type} command: '{command}'")
+            await self.send_command(ctx, response, delete=False)
 
         except:
             # REPORT ERROR
@@ -288,7 +342,7 @@ class CommandsDB(commands.Cog):
 
         # GET DATABASE COMMANDS
         self.c.execute("SELECT * FROM Commands WHERE command_type=?", (command_type, ))
-        result = self.c.fetchall()
+        result = sorted(self.c.fetchall())
 
         # CREATE PAGINATOR
         paginator = commands.Paginator(prefix='```\n', suffix='\n```')
@@ -300,7 +354,7 @@ class CommandsDB(commands.Cog):
 
         # SEND PAGINATOR
         for page in paginator.pages:
-            await ctx.send(page, delete_after=60)
+            await ctx.send(page)
 
     async def did_you_mean(self, ctx, input_str):
 
