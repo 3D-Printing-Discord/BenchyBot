@@ -104,9 +104,9 @@ class User_Management(commands.Cog):
 
             trimmed_data = user_activity[-672:]
 
-            print(len(trimmed_data))
-            print(trimmed_data[0])
-            print(trimmed_data[-1])
+            # print(len(trimmed_data))
+            # print(trimmed_data[0])
+            # print(trimmed_data[-1])
 
             x_data = [datetime.datetime.strptime(d[0], '%Y-%m-%d %H:%M:%S.%f') for d in trimmed_data]
             y_data = [int(d[1]) for d in trimmed_data]
@@ -218,6 +218,27 @@ class User_Management(commands.Cog):
         is_mobile = member.is_on_mobile()
         embed.add_field(name="On Mobile?", value=is_mobile, inline=False)
 
+        # SELF PROMOTION
+        if self.bot.get_cog('SelfPromotion'):
+            percentage = self.bot.get_cog('SelfPromotion').calc_percentage(member)
+
+            search_date = datetime.datetime.utcnow() - datetime.timedelta(days=120)
+            self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND date > ?", (member.id, search_date))
+            messages = self.c.fetchall()
+
+            embed.add_field(name="Self Promotion", value=f"Self Promotion Percentage: `{percentage*100:.2f}`\nMessage Count Last 30 Days: `{len(messages)}`", inline=False)
+
+        # WIKI
+        if self.bot.get_cog('Wiki'):
+            username = self.bot.get_cog('Wiki').get_username(member)
+            if username:
+                embed.add_field(name="Wiki", value=f"Wiki Username: `{username[0][1]}`", inline=False)
+
+        # CommandsDB
+        if self.bot.get_cog('CommandsDB'):
+            commands = self.bot.get_cog('CommandsDB').get_user_commands(member)
+            embed.add_field(name="CommandsDB", value=f"Created `{len(commands)}` commands.", inline=False)
+
         # ROLES
         embed.add_field(name="Roles:", value=", ".join([i.name for i in member.roles]), inline=True)
 
@@ -225,11 +246,15 @@ class User_Management(commands.Cog):
 
     @user_info.error
     async def user_info_handler(self, ctx, error):
-        """A local Error Handler."""
+        """Local Error Handler for user_info."""
 
-        # Check if our required argument inp is missing.
         if isinstance(error, commands.BadArgument):
             await ctx.send("Member not found.")
+            ctx.handled_in_local = True
+
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Member not found.")
+            ctx.handled_in_local = True
 
     @tasks.loop(minutes=15)
     # @tasks.loop(seconds=5)
