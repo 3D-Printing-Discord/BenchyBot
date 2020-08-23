@@ -21,9 +21,12 @@ class Blacklist(commands.Cog):
     async def on_message(self, message):
         if message.author == self.bot.user:
             return
-
-        if any(r.id in bot_utils.admin_roles for r in message.author.roles):
-            return
+        try:
+            if any(r.id in bot_utils.admin_roles for r in message.author.roles):
+                return
+        except:
+            pass
+            # print(f"ERROR USER: {message.author}")
 
         self.c.execute("SELECT * FROM Blacklist")
         banned_terms = self.c.fetchall()
@@ -34,9 +37,15 @@ class Blacklist(commands.Cog):
                 await message.delete()
 
                 if self.config_data["blacklist_message"] != "":
-                    await message.author.send(self.config_data["blacklist_message"])
+                    try:
+                        await message.author.send(self.config_data["blacklist_message"])
+                        dm_status = "DM Sent"
+                    except:
+                        dm_status = "DM **FAILED** to send."
 
                 embed=discord.Embed(title="Blacklist Message Removed", description=f"Message: '{message.content}'\n     By: {message.author.mention}\n     In: {message.channel.mention}", color=bot_utils.red)
+
+                await bot_utils.log(self.bot, title="Blacklist Message Removed", color=bot_utils.red, From=f"{message.author.mention} [{message.author}]", Message=f"```{message.content[:1000]}```", DM=dm_status)
                 await self.bot.get_channel(self.bot.config['bot_log_channel']).send(embed=embed)
 
     @commands.command()
