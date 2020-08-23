@@ -17,7 +17,7 @@ class Mute(commands.Cog):
 
     @commands.command()
     async def self_mute(self, ctx, time=None):
-        '''Applies a study mute to yourself for a set number of mins.'''
+        '''Applies a mute to yourself for a set number of mins.'''
         if time is None:
             await ctx.send("You forgot to specify how long you want muting for!\nUsage: `?study_mute [time to mute in mins]`")
             return
