@@ -36,7 +36,7 @@ class Magic8(commands.Cog):
         embed = discord.Embed(title="Fortune Cookie", description=answer)
         await message.edit(embed=embed)
 
-    @commands.command()
+    @commands.command(name = '8ball', aliases=['magic8'])
     @commands.has_any_role(*bot_utils.reg_roles)
     async def magic8(self, ctx):
         '''Ask the Magic-8-Ball a question!'''
