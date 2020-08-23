@@ -80,7 +80,7 @@ class MessageScanner(commands.Cog):
         term = term.lower()
 
         terms = term.split(" ")
-        print(terms)
+        # print(terms)
 
         for i in terms:
             try:
