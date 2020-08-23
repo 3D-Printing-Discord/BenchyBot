@@ -7,6 +7,8 @@ import datetime
 import json
 import bot_utils
 import sqlite3
+import TerminalLogger
+import database
 
 print(f"[✓] {os.path.basename(sys.argv[0])} Started")
 
@@ -66,6 +68,10 @@ bot.config = config_data
 # ATTACH BOT INFO
 bot.version = "v1.0.0"
 bot.start_time = datetime.datetime.utcnow()
+
+# CONNECT TO DATABASE
+databasehandler = database.DatabaseHandler(config_data['database'])
+bot.databasehandler = databasehandler
 
 # CHECK FOR READY
 @bot.event 
