@@ -3,17 +3,17 @@ from discord.ext import tasks, commands
 import json
 import datetime
 import bot_utils
+import asyncio
 
-DEBUG = False
+DEBUG = True
 
 class Help_Channel():
     version = "v1.0"
 
-    def __init__(self, bot, discord_id, channel_number, config_data, channel_id):
+    def __init__(self, bot, channel_number, config_data, channel_id):
         self.bot = bot
         self.config_data = config_data
 
-        self.discord_id = discord_id
         self.channel_id = channel_id
 
         self.channel_number = channel_number
@@ -36,20 +36,20 @@ class Help_Channel():
         seconds_open = (datetime.datetime.utcnow() - self.title_update_at).total_seconds()
         if seconds_open < 600: 
 
+            # HOLD CHANNEL 
             channel_object = self.bot.get_channel(self.channel_id)
+
+            self.owner = None
 
             # CLOSE THE CHANNEL
             await channel_object.send(embed=self.closed_embed)
             await channel_object.set_permissions(channel_object.guild.default_role, send_messages=False)
-            if self.new_topic:
-                await self.title_update(emoji="❕", status="Closed")
 
             # AWAIT 10 MIN PERIOD 
-            await discord.utils.sleep_until(self.title_update_at + datetime.timedelta(seconds=600))
+            await asyncio.sleep(601 - seconds_open)
 
             # RE-OPEN CHANNEL
             await channel_object.set_permissions(channel_object.guild.default_role, send_messages=True)
-
 
         await self.release_channel()
 
@@ -85,7 +85,6 @@ class Help_Channel():
         await self.title_update(emoji="✅", status="available")
 
 
-
 class Dynamic_Help(commands.Cog):
     version = "v1.0.0"
 
@@ -100,11 +99,11 @@ class Dynamic_Help(commands.Cog):
         # CREATE CHANNELS DICT
         self.help_channel_list = {}
         for index, chan_id in enumerate(self.config_data['help_channels'], start=1):
-            self.help_channel_list[chan_id] = Help_Channel(self.bot, chan_id, index, self.config_data, chan_id)
+            self.help_channel_list[chan_id] = Help_Channel(self.bot, index, self.config_data, chan_id)
 
         # CREATE EMBEDS
-        self.available_embed = discord.Embed(title="Channel Available", description=self.config_data['available_message'], color=bot_utils.green)
-        self.closed_embed = discord.Embed(title="Channel Closed", description=self.config_data['closed_message'], color=bot_utils.red)
+        # self.available_embed = discord.Embed(title="Channel Available", description=self.config_data['available_message'], color=bot_utils.green)
+        # self.closed_embed = discord.Embed(title="Channel Closed", description=self.config_data['closed_message'], color=bot_utils.red)
         self.directMessage_embed = discord.Embed(title="Channel Allocated", description=self.config_data['direct_message'], color=bot_utils.green)
 
         # START BACKGROUND TASKS
@@ -113,6 +112,11 @@ class Dynamic_Help(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+
+        # CHECK IF ITS IN A HELP CHANNEL
+        if message.channel.id not in self.config_data['help_channels']:
+            # if DEBUG: print("  - Message Not In Help Channel")
+            return
 
         if DEBUG: print("--- RUNNING ON_MESSAGE LISTENER IN DYANMIC HELP ---")
 
@@ -124,11 +128,6 @@ class Dynamic_Help(commands.Cog):
         # CHECK IF ITS A COMMAND
         if message.content[:1] == self.bot.config['prefix']:
             if DEBUG: print("  - Message Not Is A Command")
-            return
-
-        # CHECK IF ITS IN A HELP CHANNEL
-        if message.channel.id not in self.config_data['help_channels']:
-            if DEBUG: print("  - Message Not In Help Channel")
             return
 
         # GET USER_NAME
@@ -147,7 +146,7 @@ class Dynamic_Help(commands.Cog):
                 if self.help_channel_list[message.channel.id].new_topic:
 
                     if DEBUG: print(" - CHANGING NAME: NON-OWNER MESSAGE")
-                    await self.help_channel_list[message.channel.id].title_update(emoji="❕", status=user_name)
+                    await self.help_channel_list[message.channel.id].title_update(emoji="❕", status=self.help_channel_list[message.channel.id].owner)
             
             return
             
@@ -176,9 +175,7 @@ class Dynamic_Help(commands.Cog):
     @commands.command()
     @commands.check(bot_utils.is_admin)
     async def end_help(self, message):
-        '''
-        Ends Dynamic Help and resets the help names.
-        '''
+        '''Ends Dynamic Help and resets the help names.'''
         for index, channel in enumerate(self.config_data['help_channels']):
             target_channel = self.bot.get_channel(channel)
             await target_channel.edit(name=f"help-{index+1}")
@@ -189,18 +186,14 @@ class Dynamic_Help(commands.Cog):
     @commands.command()
     @commands.check(bot_utils.is_admin)
     async def setup_help(self, ctx):
-        '''
-        Makes all help channels available. (Admin-Only)
-        '''
+        '''Makes all help channels available. (Admin-Only)'''
 
         for channel in self.help_channel_list:
             channel.title_update(emoji='✅', status="Available")
 
     @commands.command()
     async def solved(self, ctx):
-        '''
-        Command to close an open help channel that is no longer required.
-        '''
+        '''Command to close an open help channel that is no longer required.'''
 
         # CHECK IF IN HELP CHANNEL
         if ctx.channel.id not in self.config_data['help_channels']:
@@ -209,9 +202,9 @@ class Dynamic_Help(commands.Cog):
         # GET USERNAME
         user_name = self.get_name(ctx.author)
 
-        # CHECK CHANNEL IS OPEN
-        if self.help_channel_list[ctx.channel.id].owner == None:
-            return
+        # # CHECK CHANNEL IS OPEN
+        # if self.help_channel_list[ctx.channel.id].owner == None:
+        #     return
 
         # IF OWNER OR MOD
         if self.help_channel_list[ctx.channel.id].owner == user_name or await bot_utils.is_mod(ctx):
@@ -225,30 +218,24 @@ class Dynamic_Help(commands.Cog):
         # AWAIT BOT TO BE READY
         await self.bot.wait_until_ready()
 
-        temp_chan = "\n     ".join( [ str(i) for i in self.config_data['help_channels'] ] )
-        if DEBUG: print(f" -- Channels in list:\n     {temp_chan}")
+        # temp_chan = "\n".join([str(i) for i in self.config_data['help_channels']])
+        # if DEBUG: print(f" -- Channels in list:\n     {temp_chan}")
 
-        if DEBUG: print(" -- Now looping over channels:")
+        # if DEBUG: print(" -- Now looping over channels:")
 
         # LOOP OVER ALL CHANNELS IN LIST
         for channel in self.help_channel_list.values():
-            if DEBUG: print(f"     Channel: {channel}")
+            if DEBUG: print(f"   Channel: {channel}")
+
+            # CHECK IF CHANNEL IS OCCUPIED
+            if channel.owner is None:
+                if DEBUG: print("     Channel is not owned.")
+                continue
             
             # IF CHANNEL HAS A LAST MESSAGE
             if self.bot.get_channel(channel.channel_id).last_message == None:
                 if DEBUG: print("     No last message: Next.")
                 continue
-
-            if DEBUG: print(f"     Last message: _____ ")
-
-            # CONVERT EMBEDS DICTS 
-            embeds_dict = [i.to_dict() for i in self.bot.get_channel(channel.channel_id).last_message.embeds]
-
-            # CHECK IF LAST MESSAGE IS THE AVAILABLE DICT
-            if self.available_embed.to_dict() in embeds_dict: 
-                if DEBUG: print("     Embed is available embed")
-                continue
-            if DEBUG: print(f"     Embed check passed")
 
             # GET TIME SINCE LAST MESSAGE 
             seconds_since_last_message = (datetime.datetime.utcnow() - self.bot.get_channel(channel.channel_id).last_message.created_at).total_seconds()
