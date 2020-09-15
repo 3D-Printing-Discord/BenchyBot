@@ -37,7 +37,7 @@ class DM(commands.Cog):
                 response = await bot_utils.request_text(self.bot, fetched_channel, sending_user, f"{sending_user.mention} please type your message to `{target_user}`:")
 
                 if response:
-                    await self._add_embed_field(fetched_message, name=f"Response (sent by {sending_user})", value=f"`{response}`")
+                    await self._add_embed_field(fetched_message, name=f"Response (sent by {sending_user}) [{datetime.datetime.now().strftime('%m/%d %H:%M')}]", value=response)
                     await target_user.send(f"`Message from the mods:`\n{response}")
 
                 await fetched_message.remove_reaction('📩', sending_user)
@@ -68,7 +68,6 @@ class DM(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if(message.guild == None) and (message.author != self.bot.user) and not (message.content.startswith("?")):
-            # await bot_utils.log(self.bot, title="Direct Message Received", color=bot_utils.yellow, From=f"{message.author.mention} [{message.author}]", Message=f"```{message.content[:1000]}```")
 
             if message.author.id in self.open_conversations.values():
                 mail_channel = self.bot.get_channel(self.config_data["bot_mail_channel"])
@@ -76,11 +75,11 @@ class DM(commands.Cog):
                 flipped_dict = {value:key for key, value in self.open_conversations.items()}
                 thread_message = await mail_channel.fetch_message(flipped_dict[message.author.id])
 
-                await self._add_embed_field(thread_message, f"Message", f"`{message.content}`")
+                await self._add_embed_field(thread_message, f"Message [{datetime.datetime.now().strftime('%m/%d %H:%M')}]", message.content)
 
             else:
                 thread_message = await self.create_thread(message.author)
-                await self._add_embed_field(thread_message, f"Message", f"`{message.content}`")
+                await self._add_embed_field(thread_message, f"Message [{datetime.datetime.now().strftime('%m/%d %H:%M')}]", message.content)
 
             # RESPOND TO USER
             await message.author.send(self.config_data["bot_response"])
@@ -135,13 +134,15 @@ class DM(commands.Cog):
             return
 
         thread_message = await self.create_thread(member)
-        await self._add_embed_field(thread_message, f"Response (sent by {ctx.author})", f"`{message}`")
+        await self._add_embed_field(thread_message, f"Response (sent by {ctx.author}) [{datetime.datetime.now().strftime('%m/%d %H:%M')}]", message)
 
         await member.send(f"`Message from the mods:`\n{message}")
 
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
-    async def page(self, ctx, *, message):
+    async def page(self, ctx, *, message=None):
+        if not message:
+            message = "None"
         '''Used to alert the mods. Please use in a regs channel.'''
         embed = discord.Embed(title=f"{ctx.author} is requesting assistance!", color=bot_utils.red)
         embed.add_field(name="Message", value=message, inline=False)
