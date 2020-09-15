@@ -16,9 +16,9 @@ class Deals(commands.Cog):
 
         self.cur_symbol = ['£', '$', '€']
 
-        self.config_data = []
-        with open('modules/Deals/config.json') as f:
-            self.config_data = json.load(f)
+        # self.config_data = []
+        # with open('modules/Deals/config.json') as f:
+        #     self.config_data = json.load(f)
 
     @commands.Cog.listener()
     async def on_message(self, message):
