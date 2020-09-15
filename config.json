@@ -2,11 +2,11 @@
     "description": "Benchybot Mk2",
     "log_level": "FULL",
     "prefix": "?",
-    "modules": ["Bot_Management", "Report", "ReactRoles", "Unit_Conversion", "DM", "Wiki", "CommandsDB", "Poll", "User_Management", "Showcase", "8Ball", "Scheduler", "Dice", "Yeet", "Mute", "SelfPromotion", "PCPart", "Reddit", "Ascii", "Blacklist", "Suggestions", "Moderation", "Beta_Commands", "ErrorHandler"],
+    "modules": ["Bot_Management", "Report", "ReactRoles", "Unit_Conversion", "DM", "Wiki", "CommandsDB", "Poll", "User_Management", "Showcase", "8Ball", "Scheduler", "Dice", "Yeet", "Mute", "SelfPromotion", "PCPart", "Reddit", "Ascii", "Blacklist", "Suggestions", "Moderation", "Beta_Commands", "ErrorHandler", "HelpChannels", "Entry"],
     "admin_roles": [640523571575259146, 167872530860867586, 167872106644635648],
     "mod_roles": [724004523814682767, 260945795744792578],
     "bot_channels": [700421839872327741, 339978089411117076, 471446895089156108, 667463307963138058],
-    "secret_channels": [],
+    "secret_channels": [339978089411117076],
     "bot_log_channel": 339937872050257921,
     "database": "database_prod.db"
 }
