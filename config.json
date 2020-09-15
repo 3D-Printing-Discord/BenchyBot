@@ -1,5 +1,5 @@
 {
-    "description": "Benchybot Mk2",
+    "description": "Benchybot - DM to contact the mods.",
     "log_level": "FULL",
     "prefix": "?",
     "modules": ["Bot_Management", "Report", "ReactRoles", "Unit_Conversion", "DM", "Wiki", "CommandsDB", "Poll", "User_Management", "Showcase", "8Ball", "Scheduler", "Dice", "Yeet", "Mute", "SelfPromotion", "PCPart", "Reddit", "Ascii", "Blacklist", "Suggestions", "Moderation", "Beta_Commands", "ErrorHandler", "HelpChannels", "Entry"],
