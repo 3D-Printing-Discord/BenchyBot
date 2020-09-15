@@ -19,4 +19,4 @@ class Logger(object):
 sys.stdout = Logger(sys.stdout, open(OUTPUT_FILE, "a"))
 sys.stderr = Logger(sys.stderr, open(OUTPUT_FILE, "a"), open("errorfile.log", "a"))
 
-print(f" - Now logging to {OUTPUT_FILE} - ")
+print(f"[!] Now logging to {OUTPUT_FILE}, errors ")
