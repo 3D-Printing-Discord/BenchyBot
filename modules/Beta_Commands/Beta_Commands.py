@@ -9,17 +9,41 @@ import py7zr
 import shutil
 import requests
 import re
+import datetime
+from pytz import timezone
+import pytz
+
+from PIL import Image
+import pytesseract
 
 DEBUG = False
 
-COMBO = '''
-   _____                _           _ 
-  / ____|              | |         | |
- | |     ___  _ __ ___ | |__   ___ | |
- | |    / _ \| '_ ` _ \| '_ \ / _ \| |
- | |___| (_) | | | | | | |_) | (_) |_|
-  \_____\___/|_| |_| |_|_.__/ \___/(_)
-  '''
+timezone_lookup = {}
+
+for tz in pytz.all_timezones:
+    try:
+        key = tz.split("/")[1].upper()
+    except:
+        key = tz.upper()
+
+    timezone_lookup[key] = timezone(tz)
+
+# timezones = {
+#     "UTC": pytz.utc,
+#     "EASTERN": timezone('US/Eastern'),
+#     "PACIFIC": timezone("US/Pacific"),
+#     "UK": timezone('Europe/London'),
+#     "AUS": timezone('Europe/London')
+# }
+
+buttons = {
+    '⚪':0xffffff,
+    '🟢':0x00cc00,
+    '🔵':0x0c71e0,
+    '🟣':0xb200ff,
+    '🟠':0xffa500,
+    '🟡':0xffd700
+    }
 
 class Beta_Commands(commands.Cog):
     version = "v0.1"
@@ -27,46 +51,242 @@ class Beta_Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.yeets = 0
-
+        self.live = True
+        self.voted = []
+ 
         # self.config_data = []
         # with open('modules/Beta_Commands/config.json') as f:
         #     self.config_data = json.load(f)
 
-    # @commands.Cog.listener()
-    # async def on_message(self, message):
+
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def read_image(self, ctx):
+        if len(ctx.message.attachments) == 0:
+            await ctx.send("Please send an image!")
+
+        await ctx.message.attachments[0].save("runtimefiles/ocrimage.png")
+        await ctx.send(pytesseract.image_to_string(Image.open("runtimefiles/ocrimage.png")))
+
+    @commands.command()
+    @commands.check(bot_utils.is_bot_channel)
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def toggle_button(self, ctx):
+        if not ctx.author.id == 212995985901617154:
+            return
+
+        if self.live:
+            self.live = False
+            await ctx.send("Button is now off")
+        else:
+            self.live = True 
+            await ctx.send("Button is now on")
+
+
+    @commands.command()
+    @commands.check(bot_utils.is_bot_channel)
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def test_embed(self, ctx):
+        embed=discord.Embed(title=" TEST EMBED", description=f"This embed tests embedding an image")
+
+        embed.set_image(url="https://knowpathology.com.au/app/uploads/2018/07/Happy-Test-Screen-01-825x510.png")
+
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def the_button(self, ctx):
+        '''
+        ALL PRAISE THE BUTTON
+        '''
+
+        if not ctx.author.id == 212995985901617154:
+            return
+
+        embed=discord.Embed(title="THE BUTTON", description=f"loading...\n")
+        message = await ctx.send(embed=embed)
+
+        leader_board = []
+
+        await asyncio.sleep(3)
+
+        await message.add_reaction('⚪')
+
+        while self.live:
+            leader_board = sorted(leader_board, key=lambda x: x[2], reverse=True)
+            leader_board.append(await self.the_button_manager(ctx,message,leader_board))
+
+        embed=discord.Embed(title="THE BUTTON", description=f"GAME OVER")
+        await message.edit(embed=embed)
+        await message.clear_reactions()
+        self.voted = []
+
+    def numbers_to_trophies(self, number):
+
+        number += 1
+
+        if number == 1:
+            return '🥇'
+        elif number == 2:
+            return '🥈'
+        elif number == 3:
+            return '🥉'
+        else:
+            return number
+
+    def rounds_from_colour(self, colour):
+
+        my_list = {
+            '⚪':15,
+            '🟢':31,
+            '🔵':81,
+            '🟣':273,
+            '🟠':1282,
+            '🟡':9177
+        }
+
+        return rounds[colour]
+
+    async def the_button_manager(self, ctx, message, leader_board):
+        if DEBUG: print("the_button_manager")
+        timeout_time = 30
+
+        # GENERATE LEADER BOARD
+        if DEBUG: print("generating board")
+
+        if len(leader_board) == 0:
+            no_players = "~ No High Scores ~"
+            joined_leader_board = f"```{no_players:^30}```"
+        else:
+            strings_leader_board = [f"{self.numbers_to_trophies(n)} {i[0]} {str(i[1]):<30} {str(i[2])} pts" for n, i in enumerate(leader_board)]
+            joined_leader_board = "```\n" + "\n".join(strings_leader_board) + "\n```"
+        print(joined_leader_board)
+
+        if DEBUG: print("resetting score")
+        score = 0
+
+        for k, v in buttons.items():
+            if DEBUG: print("Colour Update")
+            # await message.clear_reactions()
+            # await message.add_reaction(k)
+            for i in range(self.rounds_from_colour(k)):
+                if DEBUG: print("Score Update")
+                score += 10
+
+                if DEBUG: print("   - Updating Message")
+                embed=discord.Embed(title=f"{k} THE BUTTON {k}", description=f"Click the button...\nScore: `{score}` points!\n\nLeaderboard:\n{joined_leader_board}", color=v)
+                await message.edit(embed=embed)
+
+                if DEBUG: print("   - Setting check")
+                # DEF CHECK OF RESPONSE
+                def check(reaction, user):
+                    return str(reaction.emoji) in buttons and message.id == reaction.message.id and not (user in self.voted)
+
+
+                if DEBUG: print("   - Awaiting Check")
+                try:
+                    reaction, user = await ctx.bot.wait_for('reaction_add', timeout=timeout_time, check=check)
+                    if DEBUG: print("   - Press detected!")
+                    embed=discord.Embed(title=f"{k} THE BUTTON {k}", description=f"**WE HAVE A WINNER!**\n\n{user}\nScore: `{score}`\n\nLeaderboard:\n{joined_leader_board}", color=v)
+                    await message.edit(embed=embed)
+                    await asyncio.sleep(10)
+                    self.voted.append(user)
+                    return [k, user, score]
+
+                except asyncio.TimeoutError:
+                    if DEBUG: print("   - No press detected!")
+                    pass
+
+        if DEBUG: print("   - Setting check")
+        # DEF CHECK OF RESPONSE
+        def check(reaction, user):
+            return str(reaction.emoji) in buttons and message.id == reaction.message.id and not (user in self.voted)
+
+        reaction, user = await ctx.bot.wait_for('reaction_add', check=check)
+        if DEBUG: print("   - Press detected!")
+        embed=discord.Embed(title=f"{k} THE BUTTON {k}", description=f"**WE HAVE A WINNER!**\n\n{user}\nScore: {score}\n\nLeaderboard:\n{joined_leader_board}", color=v)
+        await message.edit(embed=embed)
+        await asyncio.sleep(10)
+        self.voted.append(user)
+        return [k, user, score]
+
+
+    @commands.command()
+    @commands.check(bot_utils.is_bot_channel)
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def after_dark(self, ctx):
+        await ctx.message.delete()
+
+        await ctx.author.send("This is a test message which should contain an invitation! As soon as Acid lets me know what text he wants here I shall make it so!")
+
+    @commands.command()
+    @commands.check(bot_utils.is_bot_channel)
+    async def time_zones(self, ctx):
+        '''View the timezones that can be used.'''
+
+        # CREATE PAGINATOR
+        paginator = commands.Paginator(prefix='```\n', suffix='\n```')
+        paginator.add_line(f'--- TIMEZONES ({len(timezone_lookup.keys())}) ---')
+
+        def split_list(input_list, no_lists=3):
+            input_list = sorted(input_list)
+
+            lis_a = input_list[0::3]
+            lis_b = input_list[1::3]
+            lis_c = input_list[2::3]
+            return zip(lis_a, lis_b, lis_c)
+
+        # ADD COMMANDS TO PAGINATOR
+        for a, b, c in split_list(timezone_lookup.keys()):
+            paginator.add_line(f"{a:<15}{b:<15}{c}")
+
+        # SEND PAGINATOR
+        for page in paginator.pages:
+            await ctx.send(page)
+
+    @commands.command(aliases=list(timezone_lookup.keys()), hidden=True)
+    async def time_error(self, ctx, location):
+        await ctx.send("The time command has changed! Now use: `?time [timezone]`")
+
+    @commands.command()
+    async def time(self, ctx, time_zone=None):
+        '''Used to get the current time in a timezone.'''
+
+        if not time_zone:
+            await ctx.send("You must supply a timezone to lookup: `?time [time_zone]`")
+            return 
+
+        time_zone = time_zone.upper()
+
+        UTC_TIME = datetime.datetime.now(tz=datetime.timezone.utc)
+        try:
+            LOCAL_TIME = UTC_TIME.astimezone(timezone_lookup[time_zone])
+        except:
+            await ctx.send("Sorry, I dont know that timezone. try `?time_zones` for a list of available timeszones.")
+            return
+
+        await ctx.send(f"The current time in `{timezone_lookup[time_zone]}` is: `{LOCAL_TIME.strftime('%I:%M %p')}`")
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
         
-    #     if message.content.startswith("^nrolelist"):
-    #         await message.channel.send("Hello,\n\nBecause there is a limit on the max number of roles, we are unable to continue adding each new printer that releases. We will be restructuring printer roles in the future so stay tuned!")
+        if message.content.startswith("!"):
+            if not (message.content[1] == '!' or message.content[1] == ' '):
+                embed=discord.Embed(description="The `!` prefix is now obsolete and may be removed. Consider switching to the new `?` prefix for commands.")
+                await message.channel.send(embed=embed)
 
-    #     if message.channel.id == 339978089411117076:
-    #         if len(message.content) > 280:
-    #             await message.delete()
+        if message.content.startswith("^") and len(message.content) > 1:
+            if not (message.content[1] == '^' or message.content[1] == ' '):
+                embed=discord.Embed(description="The `^` prefix is now obsolete and has been removed. To access commands you will need to switch to the new `?` prefix.")
+                await message.channel.send(embed=embed)
 
-    #             API_KEY = 'AxTd4eNGF4vhXT8MUoJD-BkOVUMsJN-r'
-    #             import requests 
+        if message.content.startswith(('^help', '!help')):
+            embed=discord.Embed(description="Try `?help`")
+            await message.channel.send(embed=embed)
 
-    #             url = 'https://pastebin.com/api/api_post.php'
-    #             data = {
-    #                 'api_dev_key':'AxTd4eNGF4vhXT8MUoJD-BkOVUMsJN-r',
-    #                 'api_option':'paste',
-    #                 'api_paste_code':message.content
-    #                 }
-
-    #             r = requests.post(url, data=data)
-    #             print(r.content)
-                
-    #             embed = discord.Embed(title=f"{message.author} (Shortened Message)", description=f"{message.content[:280]}...\n\n[Read Full Message]({r.content.decode('utf-8')})")
-    #             await message.channel.send(embed=embed)
-
-
-    # @commands.Cog.listener()
-    # async def on_message(self, message):
-    #     x = re.findall('(Y|y)(e|E){2,}(T|t)', message.content)
-    #     if x and message.author.id != self.bot.user.id:
-    #         await message.add_reaction(":yeet:730210956793086034")
-    #         self.yeets = self.yeets + len(x)
-    #         if len(x) > 1:
-    #             await message.channel.send(f"```{COMBO}```")
+        if message.content.startswith("^rolelist") or message.content.startswith("^addrole"):
+            await message.channel.send("Hello,\n\nBecause there is a limit on the max number of roles, we are unable to continue adding each new printer that releases. We will be restructuring printer roles in the future so stay tuned!")
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -90,7 +310,49 @@ class Beta_Commands(commands.Cog):
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
+    async def request_text(self, ctx):
+
+        bot = self.bot
+        channel = ctx.channel
+        member = ctx.author
+        message = "Please respond with your text"
+        timeout=5
+
+        request_message = await channel.send(message)
+        await request_message.add_reaction('❌')
+
+        def message_check(m):
+            return m.author == member and m.channel == channel
+
+        def reaction_check(reaction, user):
+            return str(reaction.emoji) == '❌' and user != bot.user and request_message.id == reaction.message.id 
+            
+        done, pending = await asyncio.wait([
+                        bot.wait_for('message', check=message_check, timeout=timeout),
+                        bot.wait_for('reaction_add', check=reaction_check, timeout=timeout)
+                    ], return_when=asyncio.FIRST_COMPLETED)
+
+        try:
+            return_object = done.pop().result()
+        except:
+            exception = done.pop().exception()
+            return_object = False
+
+        for future in pending:
+            future.cancel()
+
+        await request_message.delete()
+
+        if type(return_object) == discord.message.Message:
+            await return_object.delete()
+            return return_object.content
+        else:
+            return False
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def ban_log(self, ctx):
+        '''Shows all server bans.'''
 
         if not ctx.channel.id == 339978089411117076:
             return
@@ -116,7 +378,7 @@ class Beta_Commands(commands.Cog):
     async def backup(self, ctx):
         pass
         print("Copying files")
-        new_path = shutil.copy('database_prod.db', 'runtimefiles/backup')
+        new_path = shutil.copy('logfile.log', 'runtimefiles/backup')
         print("New Path = ", new_path)
         print("Done Copying")
 
@@ -128,14 +390,36 @@ class Beta_Commands(commands.Cog):
         print("Done Zipping")
 
     @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def lmgtfy(self, ctx, *, term):
+        '''Delivers Sass.'''
+        await ctx.message.delete()
+        await ctx.send(f"<https://lmgtfy.com/?q={term.replace(' ', '+')}>")
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def ntest(self, ctx, *, content="Test"):
+        pass
+
+    async def bot_log(self, title="Log", author=None, description=None, color=bot_utils.blue, **kwargs):
+        embed=discord.Embed(title=title, description=description, color=bot_utils.blue)
+
+        for k, v in kwargs.items():
+            embed.add_field(name=k, value=v, inline=False)
+
+        await self.bot.get_channel(self.bot.config['bot_log_channel']).send(embed=embed)
+
+    @commands.command()
     async def add_printer(self, ctx, *, printer):
         '''Beta Command: Adds a printer to your name.'''
         nick_string = f"{ctx.author.name} | {printer}"
         if len(nick_string) > 32:
-            await ctx.send("Name string too long.")
+            embed=discord.Embed(title="Name String Too Long", description=f"The printer name you submitted was too long! Try a shorter name or an abbreviation.")
+            await ctx.send(embed=embed)
         else:
             await ctx.author.edit(nick=nick_string)
-            await ctx.send("Done.")
+            embed=discord.Embed(title="Name Changed", description=f"{ctx.author.mention} your name has been changed successfully.")
+            await ctx.send(embed=embed)
 
     @add_printer.error
     async def add_printer_handler(self, ctx, error):
@@ -143,7 +427,8 @@ class Beta_Commands(commands.Cog):
 
         # Check if our required argument inp is missing.
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("You need to provide a printer name. Use the command like this (no [ ] needed):\n`?add_printer [Printer Name]`")
+            embed=discord.Embed(title="You need to provide a printer name.", description="Use the command like this:\n`?add_printer [Printer Name]`\n\nExample\n`?add_printer Prusa i3`")
+            await ctx.send(embed=embed)
             ctx.handled_in_local = True
 
     @commands.command()
@@ -158,7 +443,7 @@ class Beta_Commands(commands.Cog):
 
     # @commands.Cog.listener()
     # async def on_message(self, message):
-    #     if 'anet' in message.content.lower():
+    #     if 'anet' in message.content.lower().split():
     #         await message.add_reaction('🔥')
 
     # @commands.command()
