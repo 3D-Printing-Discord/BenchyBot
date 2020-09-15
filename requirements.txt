@@ -7,3 +7,6 @@ PyGithub
 scipy
 beautifulsoup4
 d20
+pytz
+CurrencyConverter
+GitPython
