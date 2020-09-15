@@ -39,6 +39,8 @@ class ReactRoles(commands.Cog):
 
         # FETCH ALL RESULTS
         role = self.c.fetchone()
+        self.c.close()
+        self.c = self.conn.cursor()
 
         # SEND COMMAND RESPONSE
         if role == None:
@@ -77,6 +79,8 @@ class ReactRoles(commands.Cog):
         # GET MESSAGE FROM DATABASE
         self.c.execute("SELECT * FROM ReactRoles WHERE owning_message=? AND reaction=?", (RawReactionActionEvent.message_id, str(RawReactionActionEvent.emoji)))
         role = self.c.fetchone()
+        self.c.close()
+        self.c = self.conn.cursor()
 
         # SEND COMMAND RESPONSE
         if role == None:
