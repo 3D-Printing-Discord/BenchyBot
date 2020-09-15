@@ -3,5 +3,6 @@
     "delete_message": "Your post in the self-promotion channel has been removed as you do not meet the requirements for posting. If you believe this deletion was in error you can respond to this message to contact the mods.",
     "post_threshold": 5,
     "age_min": 7,
-    "link_spam_threshold": 3
+    "link_spam_threshold": 3,
+    "min_messages": 50
 }

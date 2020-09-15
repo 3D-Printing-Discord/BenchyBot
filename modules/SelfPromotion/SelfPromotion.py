@@ -41,25 +41,35 @@ class SelfPromotion(commands.Cog):
 
             promotion_per = self.calc_percentage(message.author)*100
             check_promotion = promotion_per > self.config_data['post_threshold']
-            promotion_error = f"Self promotion messages must be under {self.config_data['post_threshold']}%. Current: {promotion_per:.2f}%"
+            promotion_error_mod = f"Self promotion messages must be under {self.config_data['post_threshold']}%. Current: {promotion_per:.2f}%"
+            promotion_error_pub = f"You are using this channel too much."
 
             days_on_server = (datetime.datetime.utcnow() - message.author.joined_at).days
             check_days = days_on_server < self.config_data['age_min']
-            days_error = f"Your account must be over {self.config_data['age_min']} days. Current: {days_on_server} days"
+            days_error_mod = f"Your account must be over {self.config_data['age_min']} days. Current: {days_on_server} days"
+            days_error_pub = f"Your account is too new to the server."
 
-            formatted_reason = ((promotion_error + '\n' + days_error) * (check_promotion and check_days)) + (promotion_error * check_promotion + days_error * check_days) * (not (check_promotion and check_days))
+            number_of_messages = self.message_count(message.author)
+            check_messages = number_of_messages < self.config_data['min_messages'] 
+            messages_error_mod = f"You must have over {self.config_data['min_messages']} messages on the server. Current: {number_of_messages}"
+            messages_error_pub = f"You do not have enough messages on the server."
 
-            if check_promotion or check_days:
+            # formatted_reason = ((promotion_error + '\n' + days_error) * (check_promotion and check_days)) + (promotion_error * check_promotion + days_error * check_days) * (not (check_promotion and check_days))
+            formatted_reason_mod = (check_promotion * (promotion_error_mod + "\n")) + (check_days * (days_error_mod + "\n")) + (check_messages * (messages_error_mod + "\n"))
+            formatted_reason_pub = (check_promotion * (promotion_error_pub + "\n")) + (check_days * (days_error_pub + "\n")) + (check_messages * (messages_error_pub + "\n"))
+
+
+            if check_promotion or check_days or check_messages:
 
                 await message.delete()
 
                 try:
-                    await message.author.send(self.config_data['delete_message'] + '\n\nReason for deletion:\n' + formatted_reason)
+                    await message.author.send(self.config_data['delete_message'] + '\n\nReason for deletion:\n' + formatted_reason_pub)
                     dm_status = "DM Sent Successfully"
                 except:
                     dm_status = "**DM Failed To Send**"
 
-                await bot_utils.log(self.bot, title="Self Promotion Message Removed", color=bot_utils.red, From=f"{message.author.mention} [{message.author}]", Message=f"```{message.content[:1000]}```", DM=dm_status, Reason=formatted_reason)
+                await bot_utils.log(self.bot, title="Self Promotion Message Removed", color=bot_utils.red, From=f"{message.author.mention} [{message.author}]", Message=f"```{message.content[:1000]}```", DM=dm_status, Reason=formatted_reason_mod)
             
             else:
                 self.log_message(message)
@@ -80,7 +90,7 @@ class SelfPromotion(commands.Cog):
                 self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND domain=? AND date>?", (message.author.id, domain, search_date))
                 links = self.c.fetchall()
                 
-                if len(links) > self.config_data['link_spam_threshold']:
+                if len(links) > self.config_data['link_spam_threshold'] and not bot_utils.has_any_role(member, bot_utils.admin_roles)):
 
                     await bot_utils.log(self.bot, title="Anti Spam Triggered", color=bot_utils.yellow, From=f"{message.author.mention} [{message.author}]", Message=f"```{message.content[:1000]}```", Domain=domain, JumpLink=f"[Jump Link]({message.jump_url})", Occurences=len(links), Action=None)
 
@@ -143,6 +153,13 @@ class SelfPromotion(commands.Cog):
 
         await ctx.send(f"Percentage of messages that are self-promotion for {member}:```{percentage*100:.2f} %```")
 
+    def message_count(self, member):
+        search_date = datetime.datetime.utcnow() - datetime.timedelta(days=120)
+        self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND NOT channel=? AND date > ?", (member.id, self.config_data['promotion_channel'], search_date))
+        non_promotion = self.c.fetchall()
+
+        return len(non_promotion)
+
     def calc_percentage(self, member):
         search_date = datetime.datetime.utcnow() - datetime.timedelta(days=120)
         self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND NOT channel=? AND date > ?", (member.id, self.config_data['promotion_channel'], search_date))
@@ -174,7 +191,7 @@ class SelfPromotion(commands.Cog):
             self.c.execute("INSERT INTO SelfPromotion(user_id, date, channel) VALUES (?, ?, ?)", (member.id, ctx.message.created_at, ctx.channel.id))
         self.conn.commit()
 
-        await message.edit(content=f"Done. New self promotion percentage:```{self.calc_percentage(member):.2f} %```")
+        await message.edit(content=f"Done. New self stats:```Self Promotion: {self.calc_percentage(member):.2f} %\nMessage Count: {self.message_count(member)}```")
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
