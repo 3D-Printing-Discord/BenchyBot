@@ -33,7 +33,7 @@ class ErrorHandler(commands.Cog):
         if isinstance(error, commands.CommandNotFound):
             return
         if isinstance(error, commands.CheckFailure):
-            await ctx.send(f"{ctx.author.mention} either you dont have permission to use `{ctx.prefix}{ctx.command}` or youre in the wrong channel!")
+            await ctx.send(f"{ctx.author.mention} either you dont have permission to use `{ctx.prefix}{ctx.command}` or you\'re in the wrong channel!")
             return
 
         print("~~ Global Error Handler ~~~")
@@ -41,9 +41,23 @@ class ErrorHandler(commands.Cog):
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
         if self.report:
-            traceback_formatted="".join(traceback.format_exception(type(error), error, error.__traceback__))
-            await ctx.bot.get_channel(ctx.bot.config['bot_log_channel']).send(f"```\n'Ignoring exception in command {ctx.command}\n{traceback_formatted}\n```")
 
+            traceback_formatted="".join(traceback.format_exception(type(error), error, error.__traceback__))
+            error_message = f"```\n'Ignoring exception in command {ctx.command}\n{traceback_formatted}\n```"
+
+            if len(error_message) < 2000:
+                embed=discord.Embed(title=f"An Error Occured", description=error_message, color=bot_utils.red)
+            else:
+                embed=discord.Embed(title=f"An Error Occured", description=f"```An error occured.\nThe traceback is too long for discord. See the logfile for info.\n```", color=bot_utils.red)
+
+            embed.set_author(name="Jumplink to Error", url=ctx.message.jump_url)
+            await self.bot.get_channel(self.bot.config['bot_log_channel']).send(embed=embed)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def error(self, ctx):
+        '''Causes an error. (for debug use only)'''
+        sldgkh
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
