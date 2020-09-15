@@ -32,7 +32,7 @@ async def is_admin(ctx):
     return False
 
 def has_any_role(member, roles):
-    return any([i in member.roles for i in roles)
+    return any([i in member.roles for i in roles])
 
 async def is_mod(ctx):
     """
