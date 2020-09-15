@@ -20,14 +20,13 @@ class Moderation(commands.Cog):
         self.c = self.conn.cursor()
 
     @commands.Cog.listener()
-    async def on_member_ban(guild, user):
-
+    async def on_member_ban(self, guild, user):
        target_channel = guild.get_channel(self.bot.config['bot_log_channel'])
        target_channel.send(f"{user} was just banned! (I think)")
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def rule(self, ctx, rule_number, member: discord.Member =None):
+    async def rule(self, ctx, rule_number, member: discord.Member=None):
         '''Shows a server rule.'''
         await ctx.message.delete()
 
@@ -54,7 +53,8 @@ class Moderation(commands.Cog):
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def show_infractions(self, ctx, member: discord.Member, range=None):
-
+        '''Shows the number and type of infractions a user has collected.'''
+        
         if range is not None:
             self.c.execute("SELECT * FROM Moderation_warnings WHERE user_id=?", (member.id, ))
             results = self.c.fetchall()
@@ -90,10 +90,14 @@ class Moderation(commands.Cog):
             embed.add_field(name="Author", value=f"{message.author} [{message.author.mention}]", inline=False)
             embed.add_field(name="Channel", value=message.channel.mention, inline=False)
             embed.add_field(name="Sent at", value=message.created_at, inline=False)
-            embed.add_field(name="Content", value=message.clean_content, inline=False)
+            if message.clean_content != "":
+                embed.add_field(name="Content", value=message.clean_content, inline=False)
             embed.add_field(name="Attachments", value=len(message.attachments), inline=False)
 
-            await self.bot.get_guild(RawReactionActionEvent.guild_id).get_channel(self.bot.config['bot_log_channel']).send(embed=embed, files=[await i.to_file() for i in message.attachments])
+            try:
+                await self.bot.get_guild(RawReactionActionEvent.guild_id).get_channel(self.bot.config['bot_log_channel']).send(embed=embed, files=[await i.to_file() for i in message.attachments])
+            except:
+                await self.bot.get_guild(RawReactionActionEvent.guild_id).get_channel(self.bot.config['bot_log_channel']).send("**An Error Occured!**\nAn error orrured reporting a post deletion. You shouldnt be seeing this message.")
 
             await message.delete()  
 
