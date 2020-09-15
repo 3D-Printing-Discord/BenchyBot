@@ -13,6 +13,7 @@ __pycache__
 
 # Ignore custom database
 database.db
+database_prod.db
 
 #ignore cpython
 *.cpython*
@@ -20,3 +21,6 @@ database.db
 # Ignore runtimefiles folder
 runtimefiles/*
 !.gitkeep
+
+errorfile.log
+logfile.log
