@@ -48,6 +48,7 @@ class User_Management(commands.Cog):
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
+    @commands.check(bot_utils.is_secret_channel)
     async def membership_info(self, ctx):
         '''
         Gets info on the server membership.
@@ -182,6 +183,7 @@ class User_Management(commands.Cog):
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
+    @commands.check(bot_utils.is_secret_channel)
     async def user_info(self, ctx, member: discord.Member):
         '''
         Gets info on a user
