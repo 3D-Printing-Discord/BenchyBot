@@ -51,7 +51,8 @@ class Poll(commands.Cog):
     
         del self.messages[sent_message.id]
 
-        await sent_message.edit(content=f"**{topic}**\n{result}`CLOSED`")
+        sent_message= await sent_message.channel.fetch_message(sent_message.id)
+        await sent_message.edit(content=f"{sent_message.content}`CLOSED`")
         await sent_message.unpin()
         await sent_message.clear_reactions()
 
@@ -102,7 +103,7 @@ class Poll(commands.Cog):
         for k, v in result_per.items():
             result_bar[k] = math.floor(v * len_factor) * "█"
 
-        results_string = "\n".join([f"{k}|{self.build_percent_string(result_per[k])}%|{v}" for k, v in result_bar.items()])
+        results_string = "\n".join([f"{k}|{str(round(result_per[k]*100)):>3}%|{v:<{len_factor}}|" for k, v in result_bar.items()])
         result = f"```\n{results_string}\nTotal Replies: {total_answers}```"
 
         return result
@@ -125,11 +126,6 @@ class Poll(commands.Cog):
         result = self.build_result({'👍':yes_count, '👎':no_count, '🤷‍♀️':maybe_count})
 
         await message.edit(content=f"**{topic}**\n{result}")
-
-    def build_percent_string(self, percent):
-        output = str(round(percent*100))
-        output = " "*(3-len(output)) + output
-        return(output)
 
 def setup(bot):
     bot.add_cog(Poll(bot))
