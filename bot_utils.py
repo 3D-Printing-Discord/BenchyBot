@@ -12,7 +12,6 @@ yellow = 0xffcc00
 green = 0x66cc00
 purple = 0x330099
 
-
 # ---------- ROLES ----------
 admin_roles = [167872530860867586, 167872106644635648]
 reg_roles = [260945795744792578] + admin_roles
@@ -31,7 +30,6 @@ async def is_admin(ctx):
         if test_role in ctx.author.roles:
             return True
     return False
-
 
 def has_any_role(member, roles):
     return any([i in member.roles for i in roles)
