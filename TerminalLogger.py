@@ -4,20 +4,19 @@ import datetime
 OUTPUT_FILE = "logfile.log"
 
 class Logger(object):
-    def __init__(self, terminal, file):
-        self.terminal = terminal
-        self.log = open(file, "a")
+    def __init__(self, *args):
+        self.outputs = args
 
     def write(self, message):
-        self.terminal.write(f"{message}")
-        self.log.write(f"{message}")
-        self.log.flush()
+        for o in self.outputs:
+            o.write(f"{message}")
+            o.flush()
 
     def flush(self):
-        self.terminal.flush()
-        self.log.flush()
+        for o in self.outputs:
+            o.flush()
 
-sys.stdout = Logger(sys.stdout, OUTPUT_FILE)
-sys.stderr = Logger(sys.stderr, OUTPUT_FILE)
+sys.stdout = Logger(sys.stdout, open(OUTPUT_FILE, "a"))
+sys.stderr = Logger(sys.stderr, open(OUTPUT_FILE, "a"), open("errorfile.log", "a"))
 
 print(f" - Now logging to {OUTPUT_FILE} - ")
