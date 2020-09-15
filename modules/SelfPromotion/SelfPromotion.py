@@ -90,7 +90,7 @@ class SelfPromotion(commands.Cog):
                 self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND domain=? AND date>?", (message.author.id, domain, search_date))
                 links = self.c.fetchall()
                 
-                if len(links) > self.config_data['link_spam_threshold'] and not bot_utils.has_any_role(member, bot_utils.admin_roles)):
+                if len(links) > self.config_data['link_spam_threshold'] and not bot_utils.has_any_role(member, bot_utils.admin_roles):
 
                     await bot_utils.log(self.bot, title="Anti Spam Triggered", color=bot_utils.yellow, From=f"{message.author.mention} [{message.author}]", Message=f"```{message.content[:1000]}```", Domain=domain, JumpLink=f"[Jump Link]({message.jump_url})", Occurences=len(links), Action=None)
 
