@@ -19,6 +19,23 @@ class Dice(commands.Cog):
 
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
+    async def coin(self, ctx):
+        result = random.choice([True, False])
+        if result:
+            fmt = "heads"
+        else:
+            fmt = "tails"
+
+        embed = discord.Embed(title=f"Coin Toss", description="Flipping the coin!", color=bot_utils.red)
+        message = await ctx.send(embed=embed)
+
+        await asyncio.sleep(3)
+
+        embed = discord.Embed(title=f"Coint Toss", description=f"It's a **{fmt}**!", color=bot_utils.green)
+        await message.edit(embed=embed)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.reg_roles)
     async def d20(self, ctx, *, d='1d6'):
         '''
         Rolls a dice using d20 syntax. Defaults to a single d6
@@ -28,6 +45,12 @@ class Dice(commands.Cog):
             result = int(result)
         except d20.errors.RollSyntaxError:
             await ctx.send("Sorry, I dont recognise that dice!")
+            return
+        except d20.errors.TooManyRolls:
+            await ctx.send("Sorry, thats too many dice!")
+            return
+        except:
+            await ctx.send("Sorry, something went wrong!")
             return
 
         embed = discord.Embed(title=f"Dice ({d})", description="Shaking the dice!", color=bot_utils.red)
