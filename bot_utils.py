@@ -32,13 +32,17 @@ async def is_admin(ctx):
             return True
     return False
 
+
+def has_any_role(member, roles):
+    return any([i in member.roles for i in roles)
+
 async def is_mod(ctx):
     """
     Checks if user is a mod. This function is depreciated and will be removed in a future version.
     """
     print(f"{ctx.command} is using a legacy check that will become depreciated soon!!!")
 
-    roles = ctx.bot.config['admin_roles'] + ctx.bot.config['mod_roles']
+    roles = admin_roles
 
     for role_id in roles:
         test_role = discord.utils.get(ctx.guild.roles, id=role_id)
@@ -63,13 +67,11 @@ async def is_secret_channel(ctx):
     """
     Checks if command is a secret channel
     """
-    channel_list = ctx.bot.config['secret_channels']
 
-    used_channel = ctx.channel.id
-    for channel in channel_list:
-        if channel_list[channel] == used_channel:
-            return True
-    return False
+    if ctx.channel.id in ctx.bot.config['secret_channels']:
+        return True
+    else:
+        return False
 
 async def bot_log(bot, log):
     """
