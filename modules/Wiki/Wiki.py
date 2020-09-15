@@ -68,9 +68,30 @@ class Wiki(commands.Cog):
         self.c.execute("INSERT INTO Wiki (discord_name, github_name) VALUES (?, ?)", (str(ctx.author), username))
         self.conn.commit()
 
+    def get_username(self, member):
+        self.c.execute("SELECT * FROM Wiki WHERE discord_name=?", (str(member), ))
+        result = self.c.fetchall()
+        return result
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def wiki_gen_commands_page(self, ctx):
+        '''Generates the bot commands page [Beta]'''
+        self.c.execute("SELECT * FROM Commands WHERE command_type=?", ('help', ))
+        results = self.c.fetchall()
+
+        output_list = [f"### {i[0]}\n{i[1]}\n\n" for i in results]
+
+        output_list = ["This page echos the help commands currently loaded onto the bot. You can summon these commands with using the `?` prefix. This list will be updated periodically.\n\n## Commands\n"] + output_list
+
+        f = open("test_output.txt", "w")
+        f.writelines(output_list)
+        f.close()
+
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def wiki_info(self, ctx):
+        '''Displays Wiki Info. [beta]'''
         files = os.listdir("runtimefiles/wiki_repo")
         files = [i for i in files if not i.startswith('_')]
 
@@ -144,7 +165,11 @@ class Wiki(commands.Cog):
             embed.add_field(name="Continue Reading...", value=f"https://github.com/3DprinterDiscord/wiki/wiki/{found_page}", inline=False)
             await ctx.send(embed=embed)
 
-            # await ctx.send(f"Intro:\n```\n{breif.strip()}\n```Source: https://github.com/3DprinterDiscord/wiki/{found_page}")
+        else:
+            embed=discord.Embed(title="Page Not Found", description="That page wasnt found! Try browsing the wiki and using the page search on the right hand side.", colour=bot_utils.blue)
+            embed.add_field(name="Homepage", value="[Homepage Link](https://github.com/3DprinterDiscord/wiki/wiki)", inline=False)
+            await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Wiki(bot))
