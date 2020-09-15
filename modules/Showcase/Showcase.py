@@ -70,6 +70,7 @@ class Showcase(commands.Cog):
             else:
                 try:
                     await message.author.send(self.config_data['showcase_message'])
+                    await message.author.send(f"```\n{message.content}\n```")
                     dm_status = "Sent Successfully"
                 except discord.errors.Forbidden:
                     dm_status = "**Failed To Send**"
