@@ -166,7 +166,7 @@ class Help_Channel:
         if DEBUG: print("Timeout Check")
         channel_inactive_for = await self.get_time_since_last_message()
         if DEBUG: print(channel_inactive_for)
-        print("   -", channel_inactive_for)
+        if DEBUG: print("   -", channel_inactive_for)
         
         if channel_inactive_for > self.config_data['timeout']:
             if DEBUG: print("Running _to_close")
@@ -265,7 +265,7 @@ class HelpChannels(commands.Cog):
 
         help_channel = self.help_channel_list[ctx.channel.id]
 
-        print("----------\n", help_channel.owner == ctx.author.name, '\n', ctx.author.name, help_channel.owner, '\n',  await bot_utils.is_mod(ctx), "\n----------")
+        if DEBUG: print("----------\n", help_channel.owner == ctx.author.name, '\n', ctx.author.name, help_channel.owner, '\n',  await bot_utils.is_mod(ctx), "\n----------")
         if help_channel.owner == ctx.author.name or await bot_utils.is_mod(ctx):
             await help_channel._to_close()
         else:
@@ -275,20 +275,20 @@ class HelpChannels(commands.Cog):
     @tasks.loop(seconds=60)
     async def background_ActivityCheck(self):
 
+        if DEBUG: if DEBUG: print(f" -- RUNNING ACTIVITY CHECK -- ")
         if DEBUG: print(f" -- RUNNING ACTIVITY CHECK -- ")
-        print(f" -- RUNNING ACTIVITY CHECK -- ")
 
         # AWAIT BOT TO BE READY
         await self.bot.wait_until_ready()
 
         # LOOP OVER ALL CHANNELS IN LIST
         for channel in self.help_channel_list.values():
-            if DEBUG: print(f"Channel: {channel}")
-            print(channel.channel_number, channel.owner, channel.state)
+            if DEBUG: if DEBUG: print(f"Channel: {channel}")
+            if DEBUG: print(channel.channel_number, channel.owner, channel.state)
 
             await channel.check()
 
-        if DEBUG: print("----------------------")
+        if DEBUG: if DEBUG: print("----------------------")
 
 def setup(bot):
     bot.add_cog(HelpChannels(bot))
