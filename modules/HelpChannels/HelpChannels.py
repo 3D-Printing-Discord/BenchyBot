@@ -275,7 +275,7 @@ class HelpChannels(commands.Cog):
     @tasks.loop(seconds=60)
     async def background_ActivityCheck(self):
 
-        if DEBUG: if DEBUG: print(f" -- RUNNING ACTIVITY CHECK -- ")
+        if DEBUG: print(f" -- RUNNING ACTIVITY CHECK -- ")
         if DEBUG: print(f" -- RUNNING ACTIVITY CHECK -- ")
 
         # AWAIT BOT TO BE READY
@@ -283,12 +283,12 @@ class HelpChannels(commands.Cog):
 
         # LOOP OVER ALL CHANNELS IN LIST
         for channel in self.help_channel_list.values():
-            if DEBUG: if DEBUG: print(f"Channel: {channel}")
+            if DEBUG: print(f"Channel: {channel}")
             if DEBUG: print(channel.channel_number, channel.owner, channel.state)
 
             await channel.check()
 
-        if DEBUG: if DEBUG: print("----------------------")
+        if DEBUG: print("----------------------")
 
 def setup(bot):
     bot.add_cog(HelpChannels(bot))
