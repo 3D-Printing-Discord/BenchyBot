@@ -28,7 +28,7 @@ class Entry(commands.Cog):
             return
 
         messages = [i[0] for i in self.bot.databasehandler.sqlquery("SELECT * FROM Entry", return_type='all')]
-        print(messages)
+        if DEBUG: print(messages)
 
         if payload.message_id in messages:
             # GET GUILD
@@ -49,6 +49,10 @@ class Entry(commands.Cog):
 
             # REMOVE REACTION
             await message.remove_reaction('✅', member)
+
+            # LOG
+            embed=discord.Embed(title="Member Accepted Rules", description=f"{member.mention} [{member}]")
+            await self.bot.get_channel(357705890046017536).send(embed=embed)
 
 
     @commands.command()
