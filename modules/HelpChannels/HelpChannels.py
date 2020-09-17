@@ -82,13 +82,36 @@ class Help_Channel:
         '''
         self.state = "NEW"
 
+        if len(message.mentions) != 0:
+            sent_message = await message.channel.send(f"Do you want to open this channel for {message.mentions[0]}?")
+            await sent_message.add_reaction('👍')
+            await sent_message.add_reaction('👎')
+
+            def check(reaction, user):
+                return user == message.author and (str(reaction.emoji) == '👍' or str(reaction.emoji) == '👎') and sent_message.id == reaction.message.id
+
+            try:
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=20, check=check)
+                await sent_message.delete()
+                if str(reaction.emoji) == '👍':
+                    target_user = message.mentions[0]
+                else:
+                    target_user = message.author
+            except asyncio.TimeoutError:
+                # CLEAN UP
+                await sent_message.delete()
+                target_user = message.author
+        else:   
+            target_user = message.author
+
+        self.owner = str(target_user.name)
+
         if message and self.config_data['pin_messages'] == "True":
             await message.pin()
 
-        self.owner = str(member.name)
         # await self.title_update(emoji="❗", status=self.owner)
         await self.title_update(emoji="❕", status=self.owner)
-        await member.send(embed=self.directMessage_embed)
+        await target_user.send(embed=self.directMessage_embed)
 
     async def _check_new(self):
         await self.timeout_check()
@@ -236,24 +259,24 @@ class HelpChannels(commands.Cog):
         else:
             if DEBUG: print("No action")
                  
-    # @commands.command()
-    # @commands.check(bot_utils.is_admin)
-    # async def end_help(self, message):
-    #     '''Ends Dynamic Help and resets the help names.'''
-    #     for index, channel in enumerate(self.config_data['help_channels']):
-    #         target_channel = self.bot.get_channel(channel)
-    #         await target_channel.edit(name=f"help-{index+1}")
-    #         await target_channel.send(self.config_data['offline_message'])
+    @commands.command()
+    @commands.check(bot_utils.is_admin)
+    async def end_help(self, message):
+        '''Ends Dynamic Help and resets the help names.'''
+        
+        for i, c in self.help_channel_list.items():
+            del self.help_channel_list[i]
+            c._to_avail()
 
-    #     self.bot.unload_extension(f"modules.Dynamic_Help.Dynamic_Help")
+        self.bot.unload_extension(f"modules.Dynamic_Help.Dynamic_Help")
 
-    # @commands.command()
-    # @commands.check(bot_utils.is_admin)
-    # async def setup_help(self, ctx):
-    #     '''Makes all help channels available. (Admin-Only)'''
+    @commands.command()
+    @commands.check(bot_utils.is_admin)
+    async def setup_help(self, ctx):
+        '''Makes all help channels available. (Admin-Only)'''
 
-    #     for channel in self.help_channel_list:
-    #         channel.title_update(emoji='✅', status="Available")
+        for channel in self.help_channel_list.values():
+            await channel._to_avail()
 
     @commands.command()
     async def solved(self, ctx):

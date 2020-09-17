@@ -9,6 +9,7 @@ import bot_utils
 import sqlite3
 import TerminalLogger
 import database
+import printinfo
 
 print(f"[✓] {os.path.basename(sys.argv[0])} Started")
 
