@@ -5,13 +5,16 @@ import sys
 import platform
 import datetime
 import json
-import bot_utils
-import sqlite3
-import TerminalLogger
 import database
-import printinfo
+
+import TerminalLogger
+import PrintInfo
+
 
 print(f"[✓] {os.path.basename(sys.argv[0])} Started")
+
+TerminalLogger.start()
+PrintInfo.start()
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~ LOAD CONFIG VARIABLES ~~~~~~~~~~~~~~~~~~~~~
@@ -21,16 +24,19 @@ print(f"[✓] {os.path.basename(sys.argv[0])} Started")
 try:
     with open('config.json') as f:
         config_data = json.load(f)
-except:
-    print("[✘] Config Read Failed. Please create config.json.")
+except FileNotFoundError:
+    print("[✘] Config wasnt found! Please create config.json.")
+    exit()
+except json.decoder.JSONDecodeError:
+    print("[✘] JSON ERROR: Config Invalid.")
     exit()
 
 # LOAD ACCESS TOKEN
 try:
     token = open("token.txt", "r").read()
     print(f"[✓] Token Read: {token}")
-except:
-    print("[✘] Token Read Failed. Please create token.txt with your access token.")
+except FileNotFoundError:
+    print("[✘] Token not found! Create token.txt with your access token.")
     exit()
 
 
@@ -52,7 +58,7 @@ print(f"[✓] Python Version: {platform.python_version()}")
 if os.path.isfile(config_data['database']):
     print("[✓] Database Found")
 else:
-    print("[X] Database Not Found! Try Running 'ini_database.py' to create the database.")
+    print("[X] Database Not Found! Run 'init_database.py'.")
     exit()
 
 
@@ -61,7 +67,10 @@ else:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # SETUP BOT
-bot = commands.Bot(command_prefix=config_data["prefix"], description=config_data['description'])
+bot = commands.Bot(
+    command_prefix=config_data["prefix"],
+    description=config_data['description']
+    )
 
 # ATTACH CONFIG DATA
 bot.config = config_data
@@ -74,11 +83,6 @@ bot.start_time = datetime.datetime.utcnow()
 databasehandler = database.DatabaseHandler(config_data['database'])
 bot.databasehandler = databasehandler
 
-# CHECK FOR READY
-@bot.event 
-async def on_ready(): 
-    print(f"[✓] Bot Ready! Logged in as {bot.user}")
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~ IMPORT MODULES ~~~~~~~~~~~~~~~~~~~~~~
@@ -90,7 +94,7 @@ for module in config_data["modules"]:
     try:
         bot.load_extension(f"modules.{module}.{module}")
         print(f"   [✓] {module} Loaded")
-    except:
+    except Exception:
         print(f"   [✘] ERROR Loading \'{module}\' module. Check config files.")
 
 print("[✓] Modules Loaded")
@@ -99,7 +103,14 @@ print("[✓] Modules Loaded")
 # ~~~~~~~~~~~~~~~~~~ RUN BOT ~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+# CHECK FOR READY
+@bot.event
+async def on_ready():
+    print(f"[✓] Bot Ready! Logged in as {bot.user}")
+
+
 try:
     bot.run(token)
-except:
+except Exception:
     print("[✘] Fatal Bot Runtime Exception")
