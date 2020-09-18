@@ -155,7 +155,7 @@ class ReactRoles(commands.Cog):
         roles = flags['roles'].split(" ")
         roles = [int(i) for i in roles]
 
-        if any(r.id in bot_utils.reg_roles for r in roles):
+        if any(r in bot_utils.reg_roles for r in roles):
             list_of_roles = [ctx.guild.get_role(r).name for r in roles]
             string_of_roles = "\n".join(list_of_roles)
             if not await bot_utils.await_confirm(ctx, f"**----- ‼️ WARNING ‼️ -----**\nThe reaction roles widget that you are trying to create will allow any user with access to this channel to apply roles with elevated permissions!\n\nThe roles in this widget are:```\n{string_of_roles}\n```\nAre you sure you want to continue?", confirm_time=60):
