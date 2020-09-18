@@ -4,6 +4,8 @@ from discord.ext import commands
 import json
 import bot_utils
 
+DEBUG = False
+
 class Entry(commands.Cog):
     version = "v0.1"
 
