@@ -1,7 +1,5 @@
 import sys
-import datetime
 
-OUTPUT_FILE = "logfile.log"
 
 class Logger(object):
     def __init__(self, *args):
@@ -16,7 +14,17 @@ class Logger(object):
         for o in self.outputs:
             o.flush()
 
-sys.stdout = Logger(sys.stdout, open(OUTPUT_FILE, "a"))
-sys.stderr = Logger(sys.stderr, open(OUTPUT_FILE, "a"), open("errorfile.log", "a"))
 
-print(f"[!] Now logging to {OUTPUT_FILE}, errors ")
+def start(OUTPUT_FILE='logfile.log', ERROR_FILE='errorfile.log'):
+    sys.stdout = Logger(
+        sys.stdout,
+        open(OUTPUT_FILE, "a")
+        )
+
+    sys.stderr = Logger(
+        sys.stderr,
+        open(OUTPUT_FILE, "a"),
+        open(ERROR_FILE, "a")
+        )
+
+    print(f"[!] Now logging to {OUTPUT_FILE}, errors ")
