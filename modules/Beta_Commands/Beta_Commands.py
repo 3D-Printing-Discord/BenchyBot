@@ -12,6 +12,8 @@ import re
 import datetime
 from pytz import timezone
 import pytz
+import secrets
+import pyqrcode
 
 from PIL import Image
 import pytesseract
@@ -58,6 +60,31 @@ class Beta_Commands(commands.Cog):
         # with open('modules/Beta_Commands/config.json') as f:
         #     self.config_data = json.load(f)
 
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def say(self, ctx, *, message):
+
+        await ctx.message.delete()
+        await ctx.send(message)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.reg_roles)
+    async def code(self, ctx, *, url_string="No Content"):
+        '''Generates a QR Code with the info provided. Can be used for websites etc.'''
+
+        await ctx.message.delete()
+
+        url = pyqrcode.create(url_string)
+        url.png('runtimefiles/code.png', scale=6, module_color=[0, 0, 0, 128], background=[0xff, 0xff, 0xff])
+
+        loaded_file = discord.File("runtimefiles/code.png", filename="code.png")
+        await ctx.send(file=loaded_file)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def key(self, ctx):
+        '''Generates a secure cryptographic key... then sends it making it insecure!'''
+        await ctx.send(secrets.token_urlsafe())
 
 
     @commands.command()
