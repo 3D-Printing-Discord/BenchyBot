@@ -36,7 +36,7 @@ class PCPart(commands.Cog):
 
         embed = discord.Embed(title=f"Build Info", description=table_info[0], color=bot_utils.green)
         embed.set_footer(text=f"Command sent by: {ctx.author}")
-        embed.set_author(name="Reddit ", icon_url="https://cdn.discordapp.com/attachments/339978089411117076/732579258752434246/Unknown.png")
+        embed.set_author(name="PCPartPicker", icon_url="https://cdn.discordapp.com/attachments/339978089411117076/732579258752434246/Unknown.png")
 
         for i in table_info[4:-3]:
             line=i.strip().split("|")

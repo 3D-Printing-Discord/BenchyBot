@@ -1,3 +1,5 @@
+#!/usr/bin/python3.9
+
 import os
 import discord
 from discord.ext import commands
@@ -110,7 +112,7 @@ async def on_ready():
     print(f"[✓] Bot Ready! Logged in as {bot.user}")
 
 
-try:
-    bot.run(token)
-except Exception:
-    print("[✘] Fatal Bot Runtime Exception")
+# try:
+bot.run(token)
+# except Exception:
+#     print("[✘] Fatal Bot Runtime Exception")

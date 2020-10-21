@@ -14,6 +14,9 @@ from pytz import timezone
 import pytz
 import secrets
 import pyqrcode
+import feedparser
+import html2markdown
+# import cexprtk
 
 from PIL import Image
 import pytesseract
@@ -47,6 +50,8 @@ buttons = {
     '🟡':0xffd700
     }
 
+sent_items =[]
+
 class Beta_Commands(commands.Cog):
     version = "v0.1"
 
@@ -59,6 +64,47 @@ class Beta_Commands(commands.Cog):
         # self.config_data = []
         # with open('modules/Beta_Commands/config.json') as f:
         #     self.config_data = json.load(f)
+
+    # @commands.command()
+    # @commands.has_any_role(*bot_utils.admin_roles)
+    # async def math(self, ctx, input_string):
+    #     solution = cexprtk.evaluate_expression(input_string, {})
+    #     await ctx.send(f"```\n{solution}\n```")
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def RSS(self, ctx):
+
+        print("Parsing Feeds")
+
+        feed_list = [
+            'http://allabout3dprinting.com/feed/',
+            'http://3dprintingindustry.com/feed',
+            'http://3dprinting.com/news/feed',
+            'http://3dprint.com/feed',
+            "https://www.youtube.com/feeds/videos.xml?channel_id=UCb8Rde3uRL1ohROUVg46h1A"
+        ]
+
+        feeds = [feedparser.parse(i) for i in feed_list]
+
+        for f in feeds:
+            for n in f.entries[:3]: 
+                if n.link not in sent_items:
+                    await ctx.send(n.link)
+                    sent_items.append(n.link)
+                    await asyncio.sleep(30)
+
+        # for f in feeds:
+        #     # print(f)
+        #     for i in f.entries[:5]:
+        #         print("  - ", i.title, end=" ")
+        #         if not i.link in sent_items:
+        #             # embed=discord.Embed(title=i.title, description=html2markdown.convert(i.summary), author=i.author)
+        #             await ctx.send(i.link)
+
+        #             sent_items.append(i.link)
+        #             await asyncio.sleep(30)
+
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -79,6 +125,35 @@ class Beta_Commands(commands.Cog):
 
         loaded_file = discord.File("runtimefiles/code.png", filename="code.png")
         await ctx.send(file=loaded_file)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def test_ad(self, ctx):
+        '''Test'''
+        await ctx.message.delete()
+
+        embed = discord.Embed(title="Service Request", description=ctx.message.content[9:])
+
+        sent_message = await ctx.send(embed=embed)
+        await sent_message.add_reaction('💵')
+
+
+        def check_wait(reaction, user):
+            # print("CHECK")
+            # print(str(reaction.emoji) == '💵')
+            # print(user != self.bot.user)
+            # print(sent_message.id == reaction.message.id)
+            return str(reaction.emoji) == '💵' and user != self.bot.user and sent_message.id == reaction.message.id
+
+        print("Going to wait!")
+        reaction, user = await self.bot.wait_for('reaction_add', timeout=10000, check=check_wait)
+        print("Done Waiting")
+
+        print(f"Sending DM to {user}")
+        embed = discord.Embed(title="Service Request", description=f"**Thanks for responsing to this request.**\n\nAlthough connected by the 3DPrinting server any deals you make are to happen outside of the server and are completed at your own risk.\n\nYou may now contact the user via DM to further discuss this request: {ctx.message.author.mention}\n\nCopy of the origional request:\n{ctx.message.content[9:]}\n\n`This is sample text and should be changed to be more descriptive`")
+        await user.send(embed=embed)
+        await reaction.remove(user)
+            
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -110,6 +185,13 @@ class Beta_Commands(commands.Cog):
             self.live = True 
             await ctx.send("Button is now on")
 
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def embed(self, ctx, *, message):
+        await ctx.message.delete()
+        embed=discord.Embed(description=message)
+        await ctx.send(embed=embed)
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)

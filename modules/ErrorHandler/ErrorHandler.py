@@ -33,7 +33,7 @@ class ErrorHandler(commands.Cog):
         if isinstance(error, commands.CommandNotFound):
             return
         if isinstance(error, commands.CheckFailure):
-            await ctx.send(f"{ctx.author.mention} either you dont have permission to use `{ctx.prefix}{ctx.command}` or you\'re in the wrong channel!")
+            await ctx.send(f"{ctx.author.mention} either you dont have permission to use `{ctx.prefix}{ctx.command}` or you\'re in the wrong channel!\nUse `?help` for a list of commands for which you have permission to use.")
             return
 
         print("~~ Global Error Handler ~~~")

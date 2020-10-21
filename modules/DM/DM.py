@@ -130,7 +130,7 @@ class DM(commands.Cog):
         '''Used to send DMs through the bot.'''
         await ctx.message.delete()
 
-        if not await bot_utils.await_confirm(ctx, f"**Send the following message to {member.mention}:**\n```\n{message}```", confirm_time=60):
+        if not await bot_utils.await_confirm(ctx, f"**Send the following message to {member.mention}:**\n```\n{message}```", confirm_time=90):
             return
 
         thread_message = await self.create_thread(member)

@@ -202,7 +202,7 @@ async def request_text(bot, channel, member, message, timeout=60):
         else:
             return False
 
-async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60, delete_after=True):
+async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60, delete_after=True, requires_poster=False):
     '''
     Reacts to a message and awaits a user to agree.
     '''
@@ -215,7 +215,10 @@ async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60
 
     # DEF CHECK FOR RESPONSE
     def check(reaction, user):
-        return str(reaction.emoji) == emoji and user != bot.user and confirm_message.id == reaction.message.id
+        if requires_poster:
+            return str(reaction.emoji) == emoji and user != bot.user and confirm_message.id == reaction.message.id and user.id == message.author.id
+        else:
+            return str(reaction.emoji) == emoji and user != bot.user and confirm_message.id == reaction.message.id
 
     # AWAIT AND HANDLE RESPONSE
     try:

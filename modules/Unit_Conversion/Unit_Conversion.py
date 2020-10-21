@@ -112,7 +112,7 @@ class Unit_Conversion(commands.Cog):
             elif str(q.unit) == 'year': # Years to seconds (regs only)
                 if message.channel.id == 260957117412802561:
                     output_string = f"**{q.value} years is:**\n{12 * q.value} months\n{365 * q.value} days\n{525600 * q.value} minutes\n{31536000 * q.value} seconds"
-                    embed.add_field(name="xkuyax wanted this key feature:", value=output_string, inline=False)
+                    embed.add_field(name="xkuyax wanted this key feature, but Blaa complains about it a lot:", value=output_string, inline=False)
 
                     react_emoji = '📆'
 

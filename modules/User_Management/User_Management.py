@@ -258,6 +258,11 @@ class User_Management(commands.Cog):
             await ctx.send("Member not found.")
             ctx.handled_in_local = True
 
+
+    async def on_member_update(self, before, after):
+        if before.premium_since is None and after.premium_since is not None:
+            await bot_utils.log(self.bot, "Nitro Boost")
+
     @tasks.loop(minutes=15)
     # @tasks.loop(seconds=5)
     async def user_activity_check(self):

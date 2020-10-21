@@ -4,6 +4,7 @@ import json
 import datetime
 import bot_utils
 import asyncio
+import re
 
 DEBUG = False
 
@@ -83,7 +84,7 @@ class Help_Channel:
         self.state = "NEW"
 
         if len(message.mentions) != 0:
-            sent_message = await message.channel.send(f"Do you want to open this channel for {message.mentions[0]}?")
+            sent_message = await message.channel.send(f"**Do you want to open this channel for {message.mentions[0]}?**\n\n```\nReact 👍 to open the channel for {message.mentions[0]}.\nReact 👎 to open it for yourself.\n```")
             await sent_message.add_reaction('👍')
             await sent_message.add_reaction('👎')
 
@@ -111,7 +112,13 @@ class Help_Channel:
 
         # await self.title_update(emoji="❗", status=self.owner)
         await self.title_update(emoji="❕", status=self.owner)
-        await target_user.send(embed=self.directMessage_embed)
+
+        # try:
+        #     await target_user.send(embed=self.directMessage_embed)
+        # except Exception:
+        #     print("Failed to send DM in help channels")
+
+        await self.message_quality_check(message)
 
     async def _check_new(self):
         await self.timeout_check()
@@ -195,10 +202,27 @@ class Help_Channel:
             if DEBUG: print("Running _to_close")
             await self._to_close()
 
+    async def message_quality_check(self, message):
+
+        length_check = len(message.content) < 200
+        images_check = len(message.attachments)<1
+            
+        length_string = "**Your question looks a bit short!**\nConsider including some more information with it such as:\n- Printer make and model\n- Any Mods\n- Firmware\n- Filament material and temps\n- What slicer you are using\n- Any recent changes you have made\n- What have you tried so far"
+        images_string = "**Images can really help with debugging a printer!**\nConsider adding some to your post of:\n- The print\n- The printer"
+
+        result = length_check * length_string + "\n\n" + images_check * images_string
+
+        if length_check or images_check:
+            await message.channel.send(embed=discord.Embed(title="Could You Include More Info?", description=result))
+
     def time_since_last_update(self):
         result = (datetime.datetime.utcnow() - self.title_update_at).total_seconds()
         if DEBUG: print(result)
         return result
+
+    async def message_faq_check(self, message):
+        message_content = message.content.lower().split()
+
 
 class HelpChannels(commands.Cog):
     version = "v1.0.0"
@@ -264,11 +288,15 @@ class HelpChannels(commands.Cog):
     async def end_help(self, message):
         '''Ends Dynamic Help and resets the help names.'''
         
-        for i, c in self.help_channel_list.items():
-            del self.help_channel_list[i]
-            c._to_avail()
+        while self.help_channel_list:
+            key, value = self.help_channel_list.popitem()
+            await value._to_avail()
 
-        self.bot.unload_extension(f"modules.Dynamic_Help.Dynamic_Help")
+        # for i, c in self.help_channel_list.copy().items():
+        #     del self.help_channel_list[i]
+        #     await c._to_avail()
+
+        self.bot.unload_extension(f"modules.HelpChannels.HelpChannels")
 
     @commands.command()
     @commands.check(bot_utils.is_admin)
@@ -298,7 +326,6 @@ class HelpChannels(commands.Cog):
     @tasks.loop(seconds=60)
     async def background_ActivityCheck(self):
 
-        if DEBUG: print(f" -- RUNNING ACTIVITY CHECK -- ")
         if DEBUG: print(f" -- RUNNING ACTIVITY CHECK -- ")
 
         # AWAIT BOT TO BE READY
