@@ -71,39 +71,39 @@ class Beta_Commands(commands.Cog):
     #     solution = cexprtk.evaluate_expression(input_string, {})
     #     await ctx.send(f"```\n{solution}\n```")
 
-    @commands.command()
-    @commands.has_any_role(*bot_utils.admin_roles)
-    async def RSS(self, ctx):
+    # @commands.command()
+    # @commands.has_any_role(*bot_utils.admin_roles)
+    # async def RSS(self, ctx):
 
-        print("Parsing Feeds")
+    #     print("Parsing Feeds")
 
-        feed_list = [
-            'http://allabout3dprinting.com/feed/',
-            'http://3dprintingindustry.com/feed',
-            'http://3dprinting.com/news/feed',
-            'http://3dprint.com/feed',
-            "https://www.youtube.com/feeds/videos.xml?channel_id=UCb8Rde3uRL1ohROUVg46h1A"
-        ]
+    #     feed_list = [
+    #         'http://allabout3dprinting.com/feed/',
+    #         'http://3dprintingindustry.com/feed',
+    #         'http://3dprinting.com/news/feed',
+    #         'http://3dprint.com/feed',
+    #         "https://www.youtube.com/feeds/videos.xml?channel_id=UCb8Rde3uRL1ohROUVg46h1A"
+    #     ]
 
-        feeds = [feedparser.parse(i) for i in feed_list]
+    #     feeds = [feedparser.parse(i) for i in feed_list]
 
-        for f in feeds:
-            for n in f.entries[:3]: 
-                if n.link not in sent_items:
-                    await ctx.send(n.link)
-                    sent_items.append(n.link)
-                    await asyncio.sleep(30)
+    #     for f in feeds:
+    #         for n in f.entries[:3]: 
+    #             if n.link not in sent_items:
+    #                 await ctx.send(n.link)
+    #                 sent_items.append(n.link)
+    #                 await asyncio.sleep(30)
 
-        # for f in feeds:
-        #     # print(f)
-        #     for i in f.entries[:5]:
-        #         print("  - ", i.title, end=" ")
-        #         if not i.link in sent_items:
-        #             # embed=discord.Embed(title=i.title, description=html2markdown.convert(i.summary), author=i.author)
-        #             await ctx.send(i.link)
+    #     # for f in feeds:
+    #     #     # print(f)
+    #     #     for i in f.entries[:5]:
+    #     #         print("  - ", i.title, end=" ")
+    #     #         if not i.link in sent_items:
+    #     #             # embed=discord.Embed(title=i.title, description=html2markdown.convert(i.summary), author=i.author)
+    #     #             await ctx.send(i.link)
 
-        #             sent_items.append(i.link)
-        #             await asyncio.sleep(30)
+    #     #             sent_items.append(i.link)
+    #     #             await asyncio.sleep(30)
 
 
     @commands.command()
@@ -120,39 +120,43 @@ class Beta_Commands(commands.Cog):
 
         await ctx.message.delete()
 
-        url = pyqrcode.create(url_string)
-        url.png('runtimefiles/code.png', scale=6, module_color=[0, 0, 0, 128], background=[0xff, 0xff, 0xff])
+        try:
+            url = pyqrcode.create(url_string)
+            url.png('runtimefiles/code.png', scale=6, module_color=[0, 0, 0, 128], background=[0xff, 0xff, 0xff])
+        except Exception:
+            await ctx.send("Sorry, I couldnt make that Code.")
+            return
 
         loaded_file = discord.File("runtimefiles/code.png", filename="code.png")
         await ctx.send(file=loaded_file)
 
-    @commands.command()
-    @commands.has_any_role(*bot_utils.admin_roles)
-    async def test_ad(self, ctx):
-        '''Test'''
-        await ctx.message.delete()
+    # @commands.command()
+    # @commands.has_any_role(*bot_utils.admin_roles)
+    # async def test_ad(self, ctx):
+    #     '''Test'''
+    #     await ctx.message.delete()
 
-        embed = discord.Embed(title="Service Request", description=ctx.message.content[9:])
+    #     embed = discord.Embed(title="Service Request", description=ctx.message.content[9:])
 
-        sent_message = await ctx.send(embed=embed)
-        await sent_message.add_reaction('💵')
+    #     sent_message = await ctx.send(embed=embed)
+    #     await sent_message.add_reaction('💵')
 
 
-        def check_wait(reaction, user):
-            # print("CHECK")
-            # print(str(reaction.emoji) == '💵')
-            # print(user != self.bot.user)
-            # print(sent_message.id == reaction.message.id)
-            return str(reaction.emoji) == '💵' and user != self.bot.user and sent_message.id == reaction.message.id
+    #     def check_wait(reaction, user):
+    #         # print("CHECK")
+    #         # print(str(reaction.emoji) == '💵')
+    #         # print(user != self.bot.user)
+    #         # print(sent_message.id == reaction.message.id)
+    #         return str(reaction.emoji) == '💵' and user != self.bot.user and sent_message.id == reaction.message.id
 
-        print("Going to wait!")
-        reaction, user = await self.bot.wait_for('reaction_add', timeout=10000, check=check_wait)
-        print("Done Waiting")
+    #     print("Going to wait!")
+    #     reaction, user = await self.bot.wait_for('reaction_add', timeout=10000, check=check_wait)
+    #     print("Done Waiting")
 
-        print(f"Sending DM to {user}")
-        embed = discord.Embed(title="Service Request", description=f"**Thanks for responsing to this request.**\n\nAlthough connected by the 3DPrinting server any deals you make are to happen outside of the server and are completed at your own risk.\n\nYou may now contact the user via DM to further discuss this request: {ctx.message.author.mention}\n\nCopy of the origional request:\n{ctx.message.content[9:]}\n\n`This is sample text and should be changed to be more descriptive`")
-        await user.send(embed=embed)
-        await reaction.remove(user)
+    #     print(f"Sending DM to {user}")
+    #     embed = discord.Embed(title="Service Request", description=f"**Thanks for responsing to this request.**\n\nAlthough connected by the 3DPrinting server any deals you make are to happen outside of the server and are completed at your own risk.\n\nYou may now contact the user via DM to further discuss this request: {ctx.message.author.mention}\n\nCopy of the origional request:\n{ctx.message.content[9:]}\n\n`This is sample text and should be changed to be more descriptive`")
+    #     await user.send(embed=embed)
+    #     await reaction.remove(user)
             
 
     @commands.command()
@@ -353,10 +357,6 @@ class Beta_Commands(commands.Cog):
         # SEND PAGINATOR
         for page in paginator.pages:
             await ctx.send(page)
-
-    @commands.command(aliases=list(timezone_lookup.keys()), hidden=True)
-    async def time_error(self, ctx, location):
-        await ctx.send("The time command has changed! Now use: `?time [timezone]`")
 
     @commands.command()
     async def time(self, ctx, time_zone=None):

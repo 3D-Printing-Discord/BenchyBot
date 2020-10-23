@@ -44,10 +44,10 @@ class Entry(commands.Cog):
             message = await channel.fetch_message(payload.message_id)
 
             # GET REACTOR
-            member = guild.get_member(payload.user_id)
+            member = payload.member
 
             # REMOVE ROLE
-            await guild.get_member(payload.user_id).remove_roles(role_obj)
+            await member.remove_roles(role_obj)
 
             # REMOVE REACTION
             await message.remove_reaction('✅', member)

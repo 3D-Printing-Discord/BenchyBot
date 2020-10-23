@@ -73,7 +73,7 @@ class Blacklist(commands.Cog):
         except:
             await ctx.send(f"'{term}' failed to remove from blacklist!")
 
-    @commands.command(hidden=True)
+    @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def view_banned_terms(self, ctx):
         '''Shows the currently blacklisted terms.'''
