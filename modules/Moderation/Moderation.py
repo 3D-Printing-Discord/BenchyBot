@@ -50,6 +50,19 @@ class Moderation(commands.Cog):
         else:
             await ctx.send(embed=embed)
 
+    @rule.error
+    async def rule_error(self, ctx, error):
+        await ctx.message.delete()
+
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.author.send("Warning was not issued: Missing a required argument.")
+            ctx.handled_in_local = True
+
+        if isinstance(error, commands.MemberNotFound):
+            await ctx.author.send("Warning was not issued: Could not find the user.")
+            ctx.handled_in_local = True
+
+
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def show_infractions(self, ctx, member: discord.Member, range=None):
@@ -78,12 +91,12 @@ class Moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, RawReactionActionEvent):
-        message = await self.bot.get_guild(RawReactionActionEvent.guild_id).get_channel(RawReactionActionEvent.channel_id).fetch_message(RawReactionActionEvent.message_id)
-
         if not any(role.id in bot_utils.admin_roles for role in RawReactionActionEvent.member.roles):
             return
 
         if 'delete' in str(RawReactionActionEvent.emoji):
+            message = await self.bot.get_guild(RawReactionActionEvent.guild_id).get_channel(RawReactionActionEvent.channel_id).fetch_message(RawReactionActionEvent.message_id)
+
             embed = discord.Embed(title="Message Removed", color=bot_utils.red)
             embed.set_footer(text=f"Deleted by: {RawReactionActionEvent.member}")
 
