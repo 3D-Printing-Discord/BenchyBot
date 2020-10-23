@@ -10,13 +10,20 @@ import json
 import database
 
 import TerminalLogger
-import PrintInfo
+# import PrintInfo
+import logging
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
 
 
 print(f"[✓] {os.path.basename(sys.argv[0])} Started")
 
 TerminalLogger.start()
-PrintInfo.start()
+# PrintInfo.start()
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~ LOAD CONFIG VARIABLES ~~~~~~~~~~~~~~~~~~~~~
@@ -69,9 +76,14 @@ else:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # SETUP BOT
+intents = discord.Intents.default()
+intents.members = True 
+intents.presences = True
+
 bot = commands.Bot(
-    command_prefix=config_data["prefix"],
-    description=config_data['description']
+        command_prefix=config_data["prefix"],
+        description=config_data['description'],
+        intents=intents
     )
 
 # ATTACH CONFIG DATA
