@@ -20,6 +20,7 @@ class Dice(commands.Cog):
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
     async def coin(self, ctx):
+        '''Flip a coin!'''
         result = random.choice([True, False])
         if result:
             fmt = "heads"
