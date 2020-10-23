@@ -8,18 +8,17 @@ token.txt
 venv/*
 !.gitkeep
 
+# Ignore runtimefiles folder
+runtimefiles/*
+!.gitkeep
+
 # Ignore pycache
 __pycache__
 
 # Ignore custom database
-database.db
-database_prod.db
+*.db
 
 #ignore cpython
 *.cpython*
-
-# Ignore runtimefiles folder
-runtimefiles/*
-!.gitkeep
 
 *.log
