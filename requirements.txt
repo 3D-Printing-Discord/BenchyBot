@@ -11,3 +11,4 @@ d20
 pytz
 CurrencyConverter
 GitPython
+stemming
