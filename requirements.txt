@@ -1,3 +1,4 @@
+wheel
 discord.py
 discord-flags
 matplotlib
