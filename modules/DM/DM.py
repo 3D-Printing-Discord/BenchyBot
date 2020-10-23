@@ -127,7 +127,7 @@ class DM(commands.Cog):
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def dm(self, ctx, member: discord.Member, *, message):
-        '''Used to send DMs through the bot.'''
+        '''Use to send DMs through the bot.'''
         await ctx.message.delete()
 
         if not await bot_utils.await_confirm(ctx, f"**Send the following message to {member.mention}:**\n```\n{message}```", confirm_time=90):
@@ -141,9 +141,11 @@ class DM(commands.Cog):
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
     async def page(self, ctx, *, message=None):
+        '''Used to alert the mods. Please use in a regs channel.'''
+
         if not message:
             message = "None"
-        '''Used to alert the mods. Please use in a regs channel.'''
+            
         embed = discord.Embed(title=f"{ctx.author} is requesting assistance!", color=bot_utils.red)
         embed.add_field(name="Message", value=message, inline=False)
         await ctx.guild.get_channel(self.config_data["bot_mail_channel"]).send("@here", embed=embed)
