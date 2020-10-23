@@ -60,6 +60,8 @@ class Entry(commands.Cog):
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def create_entry_widget(self, ctx):
+        '''Create a reaction widget to allow entry to the server.'''
+        
         embed = discord.Embed(title="Agree to the Rules.", description="To indicate that you have read and agree to the server rules please react to this message with a green tick.")
         message = await ctx.send(embed=embed)
         await message.add_reaction('✅')
