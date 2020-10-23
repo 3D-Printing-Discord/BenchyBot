@@ -66,15 +66,6 @@ class Amazon(commands.Cog):
         await message.delete()
         await message.channel.send(f"**{message.author.mention} said:**\n{new_message}\n`LINKS SHORTENED`")
 
-    @commands.command()
-    @commands.has_any_role(*bot_utils.reg_roles)
-    async def amazon(self, ctx):        
-        urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', ctx.message.content)
-
-        for s in urls:
-            if urlparse(urls[0]).netloc.split('.')[1] == 'amazon':
-                result = 'https://smile.' + re.search('amazon.*?\/', s)[0] + re.search('dp\/.*?\/', s)[0]
-                await ctx.send(result)
 
 def setup(bot):
     bot.add_cog(Amazon(bot))
