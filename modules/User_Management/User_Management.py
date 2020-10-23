@@ -181,7 +181,7 @@ class User_Management(commands.Cog):
             await ctx.send(file=loaded_file_4)
             await ctx.send(file=loaded_file_2)
 
-    @commands.command()
+    @commands.command(aliases=['user'])
     @commands.has_any_role(*bot_utils.admin_roles)
     @commands.check(bot_utils.is_secret_channel)
     async def user_info(self, ctx, member: discord.Member):
