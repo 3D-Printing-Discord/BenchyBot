@@ -122,10 +122,11 @@ class Beta_Commands(commands.Cog):
 
         try:
             url = pyqrcode.create(url_string)
-            url.png('runtimefiles/code.png', scale=6, module_color=[0, 0, 0, 128], background=[0xff, 0xff, 0xff])
         except Exception:
             await ctx.send("Sorry, I couldnt make that Code.")
             return
+
+        url.png('runtimefiles/code.png', scale=6, module_color=[0, 0, 0, 128], background=[0xff, 0xff, 0xff])
 
         loaded_file = discord.File("runtimefiles/code.png", filename="code.png")
         await ctx.send(file=loaded_file)
