@@ -93,7 +93,7 @@ class ReactRoles(commands.Cog):
         await target_member.remove_roles(role)
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def block_roles(self, ctx, username):
         '''
         Blocks a user from editing their roles through reaction roles.
@@ -114,7 +114,7 @@ class ReactRoles(commands.Cog):
         await ctx.send(f"User '{member}' can no longer edit their roles.")
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def unblock_roles(self, ctx, username):
         '''
         Allows a previously blocked user to edit their roles through reaction roles again.
