@@ -122,6 +122,8 @@ print("[✓] Modules Loaded")
 @bot.event
 async def on_ready():
     print(f"[✓] Bot Ready! Logged in as {bot.user}")
+    activity=discord.Activity(type=discord.ActivityType.listening, name=config_data["status"])
+    await bot.change_presence(activity=activity)
 
 
 # try:

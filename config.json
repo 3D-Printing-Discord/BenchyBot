@@ -8,5 +8,6 @@
     "bot_channels": [700421839872327741, 339978089411117076, 471446895089156108, 667463307963138058],
     "secret_channels": [339978089411117076],
     "bot_log_channel": 339937872050257921,
-    "database": "database_prod.db"
+    "database": "database_prod.db",
+    "status": "?help for help"
 }
