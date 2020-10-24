@@ -121,7 +121,7 @@ class Wiki(commands.Cog):
             await ctx.send(page, delete_after=60)
         
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def update_local_database(self, ctx):
         '''
         Updates the local copy of the wiki which is used for wiki commands.

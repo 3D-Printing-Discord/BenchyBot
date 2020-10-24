@@ -284,7 +284,7 @@ class HelpChannels(commands.Cog):
             if DEBUG: print("No action")
                  
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def end_help(self, message):
         '''Ends Dynamic Help and resets the help names.'''
         

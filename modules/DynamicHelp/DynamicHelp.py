@@ -173,7 +173,7 @@ class Dynamic_Help(commands.Cog):
             await message.author.send(embed=self.directMessage_embed)        
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def end_help(self, message):
         '''Ends Dynamic Help and resets the help names.'''
         for index, channel in enumerate(self.config_data['help_channels']):
@@ -184,7 +184,7 @@ class Dynamic_Help(commands.Cog):
         self.bot.unload_extension(f"modules.Dynamic_Help.Dynamic_Help")
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def setup_help(self, ctx):
         '''Makes all help channels available. (Admin-Only)'''
 

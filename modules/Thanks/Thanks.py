@@ -58,7 +58,7 @@ class Thanks(commands.Cog):
             await ctx.send(f"{ctx.author.mention} has received {user_thanks[1]} thanks!\n{self.config_data['check_message']}")
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def check_thanks(self, ctx):
         self.c.execute("SELECT * FROM Thanks")
         user_thanks = self.c.fetchall()

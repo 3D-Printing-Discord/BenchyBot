@@ -52,7 +52,7 @@ class Long_Service(commands.Cog):
                                 await member.send(role['message'])
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def output_dates(self, ctx, days=0):
         output_string = f"```\nUSERS OVER {days} DAYS MEMBERSHIP:        Days:"
 
