@@ -12,69 +12,74 @@ yellow = 0xffcc00
 green = 0x66cc00
 purple = 0x330099
 
-# ---------- ROLES ----------
+# ---------- DATA ----------
 admin_roles = [167872530860867586, 167872106644635648]
 reg_roles = [260945795744792578] + admin_roles
+bot_channels = [700421839872327741, 339978089411117076, 471446895089156108, 667463307963138058]
+secret_channels = [339978089411117076]
 
-# ---------- FUNCTIONS ----------
+# ---------- CHECKS ----------
 async def is_admin(ctx):
     """
-    Checks if user is an admin. This function is depreciated and will be removed in a future version.
+    Checks if user is an admin.
     """
-    print(f"{ctx.command} is using a legacy check that will become depreciated soon!!!")
-
-    roles = ctx.bot.config['admin_roles']
-
-    for role_id in roles:
-        test_role = discord.utils.get(ctx.guild.roles, id=role_id)
+    for role in admin_roles:
+        test_role = discord.utils.get(ctx.guild.roles, id=role)
         if test_role in ctx.author.roles:
             return True
     return False
 
-def has_any_role(member, roles):
-    return any([i in member.roles for i in roles])
-
 async def is_mod(ctx):
     """
-    Checks if user is a mod. This function is depreciated and will be removed in a future version.
+    Checks if user is a mod. This function is depreciated and will be removed in a future version. Consider switching to is_admin.
     """
     print(f"{ctx.command} is using a legacy check that will become depreciated soon!!!")
 
-    roles = admin_roles
+    for role in admin_roles:
+        test_role = discord.utils.get(ctx.guild.roles, id=role)
+        if test_role in ctx.author.roles:
+            return True
+    return False
 
-    for role_id in roles:
-        test_role = discord.utils.get(ctx.guild.roles, id=role_id)
+async def is_reg(ctx):
+    """
+    Checks if user is a reg. This function is depreciated and will be removed in a future version. Consider switching to is_admin.
+    """
+    for role in reg_roles:
+        test_role = discord.utils.get(ctx.guild.roles, id=role)
         if test_role in ctx.author.roles:
             return True
     return False
 
 async def is_bot_channel(ctx):
     """
-    Checks if command is in a bot channel
+    Checks if command is in a bot channel.
     """
-    channel_list = ctx.bot.config['bot_channels']
-
-    used_channel = ctx.channel.id
-    for channel in channel_list:
-        if channel == used_channel:
+    for channel in bot_channels:
+        if channel == ctx.channel.id:
             return True
-    # await ctx.send("Try this in a bot channel")
     return False
 
 async def is_secret_channel(ctx):
     """
-    Checks if command is a secret channel
+    Checks if command is a secret channel.
     """
-
-    if ctx.channel.id in ctx.bot.config['secret_channels']:
+    if ctx.channel.id in secret_channels:
         return True
     else:
         return False
+
+
+# ---------- CHECKS ----------
+def has_any_role(member, roles):
+    return any([i in member.roles for i in roles])
 
 async def bot_log(bot, log):
     """
     Logs bot activity
     """
+    print("A depreciated log command is being used!")
+
     if bot.config['log_level'] in ("FULL", "CMD"):
         print(f"[!] {datetime.today()}: {log}")
     
