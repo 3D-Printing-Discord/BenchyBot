@@ -43,10 +43,7 @@ class Blacklist(commands.Cog):
                     except:
                         dm_status = "DM **FAILED** to send."
 
-                embed=discord.Embed(title="Blacklist Message Removed", description=f"Message: '{message.content}'\n     By: {message.author.mention}\n     In: {message.channel.mention}", color=bot_utils.red)
-
-                await bot_utils.log(self.bot, title="Blacklist Message Removed", color=bot_utils.red, From=f"{message.author.mention} [{message.author}]", Message=f"```{message.content[:1000]}```", DM=dm_status)
-                await self.bot.get_channel(self.bot.config['bot_log_channel']).send(embed=embed)
+                await bot_utils.log(self.bot, title="Blacklist Message Removed", color=bot_utils.red, From=f"{message.author.mention} [{message.author}]", Channel=message.channel.mention, Message=f"```{message.content[:1000]}```", DM=dm_status)
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
