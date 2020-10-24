@@ -542,13 +542,9 @@ class Beta_Commands(commands.Cog):
             ctx.handled_in_local = True
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def set_status(self, ctx, *, status):
-        # activity = discord.CustomActivity("Test")¶
-        # self.bot.change_presence()
-
         activity=discord.Activity(type=discord.ActivityType.listening, name=status)
-        # activity = discord.Game(status)
         await self.bot.change_presence(activity=activity)
 
     # @commands.Cog.listener()
