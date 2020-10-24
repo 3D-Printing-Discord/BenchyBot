@@ -57,7 +57,6 @@ class DM(commands.Cog):
                     x = re.findall('<@(!?)([0-9]*)>', str(embed.to_dict()))
 
                     member = fetched_channel.guild.get_member(int(x[0][1]))
-                    print(member)
 
                     if not member.id in self.open_conversations.values():
                         await self.create_thread(member)
