@@ -299,7 +299,7 @@ class HelpChannels(commands.Cog):
         self.bot.unload_extension(f"modules.HelpChannels.HelpChannels")
 
     @commands.command()
-    @commands.check(bot_utils.is_admin)
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def setup_help(self, ctx):
         '''Makes all help channels available. (Admin-Only)'''
 
