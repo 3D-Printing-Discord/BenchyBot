@@ -32,7 +32,10 @@ class Amazon(commands.Cog):
         for s in urls:
             if ('amazon' in s) or ('amzn' in s):
                 try:
-                    short_link = ('https://smile.' + re.search('ama*zo*n.*?\/', s)[0] + re.search('(dp|gp)\/.*?(\/|\?)', s)[0])
+                    if any([i in s for i in ['.co.uk', '.com', '.de']]):
+                        short_link = ('https://smile.' + re.search('ama*zo*n.*?\/', s)[0] + re.search('(dp|gp)\/.*?(\/|\?)', s)[0])
+                    else:
+                        short_link = ('https://www.' + re.search('ama*zo*n.*?\/', s)[0] + re.search('(dp|gp)\/.*?(\/|\?)', s)[0])
                     new_content = message.content.replace(s, short_link)
 
                     replace = True
