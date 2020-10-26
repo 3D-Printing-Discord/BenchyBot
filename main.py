@@ -126,7 +126,7 @@ async def on_ready():
     await bot.change_presence(activity=activity)
 
 
-# try:
-bot.run(token)
-# except Exception:
-#     print("[✘] Fatal Bot Runtime Exception")
+try:
+    bot.run(token)
+except Exception:
+    print("[✘] Fatal Bot Runtime Exception")
