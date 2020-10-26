@@ -16,6 +16,8 @@ import secrets
 import pyqrcode
 import feedparser
 import html2markdown
+import datetime
+import asyncio
 # import cexprtk
 
 from PIL import Image
@@ -107,6 +109,22 @@ class Beta_Commands(commands.Cog):
 
 
     @commands.command()
+    async def ping(self, ctx):
+        '''Latency Check.'''
+        now = datetime.datetime.utcnow()
+        _in = ctx.message.created_at
+
+        msg = await ctx.send(f"__**Pong!**__")
+
+        out = msg.created_at
+
+        in_time = now - _in
+        out_time = msg.created_at - now
+        loop_time = out - _in 
+
+        await msg.edit(content=f"__**Pong!**__```\n  IN: {in_time}\n OUT: {out_time}\nLOOP: {loop_time}```")
+
+    @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def say(self, ctx, *, message):
 
@@ -165,7 +183,6 @@ class Beta_Commands(commands.Cog):
     async def key(self, ctx):
         '''Generates a secure cryptographic key... then sends it making it insecure!'''
         await ctx.send(secrets.token_urlsafe())
-
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -380,16 +397,17 @@ class Beta_Commands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        
-        if message.content.startswith("!"):
-            if not (message.content[1] == '!' or message.content[1] == ' '):
-                embed=discord.Embed(description="The `!` prefix is now obsolete and may be removed. Consider switching to the new `?` prefix for commands.")
-                await message.channel.send(embed=embed)
+        prefixes = ['!', '^']
 
-        if message.content.startswith("^") and len(message.content) > 1:
-            if not (message.content[1] == '^' or message.content[1] == ' '):
-                embed=discord.Embed(description="The `^` prefix is now obsolete and has been removed. To access commands you will need to switch to the new `?` prefix.")
-                await message.channel.send(embed=embed)
+        for p in prefixes:
+            if message.content.startswith(p):
+                try:
+                    if not (message.content[1] == p or message.content[1] == ' '):
+                        embed=discord.Embed(description=f"The `{p}` prefix is now obsolete and may be removed. Consider switching to the new `?` prefix for commands.")
+                        await message.channel.send(embed=embed)
+                except Exception:
+                    pass
+
 
         if message.content.startswith(('^help', '!help')):
             embed=discord.Embed(description="Try `?help`")
