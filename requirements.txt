@@ -12,3 +12,5 @@ pytz
 CurrencyConverter
 GitPython
 stemming
+praw
+flake8
