@@ -52,11 +52,12 @@ class Amazon(commands.Cog):
                 replace = True
 
             if ('ebay' in s):
-                # \/itm\/.*?\?
-                # ebay.*?\/
-                short_link = ('https://www.' + re.search('ebay.*?\/', s)[0] + 'itm/' + re.search('\/itm\/.*?\?', s)[0].split('/')[-1][:-1])
-                new_content = message.content.replace(s, short_link)
-                replace = True
+                try:
+                    short_link = ('https://www.' + re.search('ebay.*?\/', s)[0] + 'itm/' + re.search('\/itm\/.*?\?', s)[0].split('/')[-1][:-1])
+                    new_content = message.content.replace(s, short_link)
+                    replace = True
+                except Exception:
+                    print(f"ERROR IN EBAY {s}")
             
         if replace:
             if force:
