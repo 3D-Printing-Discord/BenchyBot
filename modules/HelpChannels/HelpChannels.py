@@ -340,5 +340,12 @@ class HelpChannels(commands.Cog):
 
         if DEBUG: print("----------------------")
 
+    @background_ActivityCheck.after_loop
+    async def post_loop(self):
+        if self.background_ActivityCheck.failed():
+            import traceback
+            error = self.your_task.get_task().exception()
+            traceback.print_exception(type(error), error, error.__traceback__)
+
 def setup(bot):
     bot.add_cog(HelpChannels(bot))
