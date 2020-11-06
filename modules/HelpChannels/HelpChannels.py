@@ -24,7 +24,7 @@ class Help_Channel:
         self.state = "AVAILABLE"
         # await self._to_avail()
         self.owner = None
-        # self.title_update_at = None
+        self.title_update_at = None
 
         # CREATE EMBEDS
         self.available_embed = discord.Embed(title="Channel Available", description=self.config_data['available_message'], color=bot_utils.green)
@@ -44,7 +44,7 @@ class Help_Channel:
         previous_state = self.state
         self.state = "CLOSED"
 
-        channel_object = await self.get_channel()
+        channel_object = self.get_channel()
 
         if self.config_data['pin_messages'] == "True":
             for p in await channel_object.pins(): 
@@ -110,13 +110,7 @@ class Help_Channel:
         if message and self.config_data['pin_messages'] == "True":
             await message.pin()
 
-        # await self.title_update(emoji="❗", status=self.owner)
         await self.title_update(emoji="❕", status=self.owner)
-
-        # try:
-        #     await target_user.send(embed=self.directMessage_embed)
-        # except Exception:
-        #     print("Failed to send DM in help channels")
 
         await self.message_quality_check(message)
 
@@ -133,7 +127,7 @@ class Help_Channel:
         await self.title_update(emoji="✅", status="available")
         self.owner = None
 
-        channel_object = await self.get_channel()
+        channel_object = self.get_channel()
 
         # SET PERMS
         await channel_object.set_permissions(channel_object.guild.default_role, send_messages=True)
@@ -149,8 +143,6 @@ class Help_Channel:
 
         if member.name == self.owner:
             return
-
-        # await self.title_update(emoji="❕", status=self.owner)
 
     async def _check_active(self):
         await self.timeout_check()
@@ -170,12 +162,16 @@ class Help_Channel:
         if DEBUG: print("returned from check")
 
     async def get_time_since_last_message(self):
-        channel_object = await self.get_channel()
-        last_message = await channel_object.fetch_message(channel_object.last_message_id)
+        channel_object = self.get_channel()
+
+        history = await channel_object.history(limit=1).flatten()
+        last_message = history[0]
+
         seconds_since_last_message = (datetime.datetime.utcnow() - last_message.created_at).total_seconds()
+
         return seconds_since_last_message
 
-    async def get_channel(self):
+    def get_channel(self):
         return self.bot.get_channel(self.channel_id)
 
     async def title_update(self, **replacements):
@@ -216,9 +212,10 @@ class Help_Channel:
             await message.channel.send(embed=discord.Embed(title="Could You Include More Info?", description=result))
 
     def time_since_last_update(self):
-        result = (datetime.datetime.utcnow() - self.title_update_at).total_seconds()
-        if DEBUG: print(result)
-        return result
+        if self.title_update_at:
+            return (datetime.datetime.utcnow() - self.title_update_at).total_seconds()
+        else:
+            return 999
 
     async def message_faq_check(self, message):
         message_content = message.content.lower().split()
@@ -346,6 +343,8 @@ class HelpChannels(commands.Cog):
             import traceback
             error = self.your_task.get_task().exception()
             traceback.print_exception(type(error), error, error.__traceback__)
+            print(f"Channel ID: {self.channel_id}\nChannel Number: {self.channel_number}\nState: {self.state}\nOwner: {self.owner}\nTitle update at: {self.title_update_at}")
+
 
 def setup(bot):
     bot.add_cog(HelpChannels(bot))
