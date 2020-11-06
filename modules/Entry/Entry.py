@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 import json
 import bot_utils
+import asyncio
 
 DEBUG = False
 
@@ -49,12 +50,50 @@ class Entry(commands.Cog):
             # REMOVE ROLE
             await member.remove_roles(role_obj)
 
-            # REMOVE REACTION
-            await message.remove_reaction('✅', member)
+            # SEND WELCOME DM
+            embed = discord.Embed(title="Welcome!", description='''**Access to the server has now been unlocked for your account. Please note that you will be unable to send messages for the first 10 minutes after joining.**
+
+Why dont you **introduce yourself** in <#168046101860057088>, or **dive straight into 3D Printing chat** in <#167661427862142976>?
+
+**If you need assistance with your printer:**
+Check out the <#758751108419551242> channel for more info.
+
+**Tell us about your latest project:**
+Share works in progress in <#417157493244952587>
+Share completed prints in <#684578465139392556>
+Chat about projects in <#690193739460640856>
+
+**Discuss printer parts and designs in the technical channels:**
+<#224661367326638081>
+<#339862027789008898>
+<#224661007593635851>
+<#639158967645241364>
+
+**Chat with various reps from:**
+<#458449165886947328>
+<#458972392132313088>
+<#549886242041626625>
+<#505104121045450755>
+<#502967857445994509>
+<#459343408662708248>
+
+**Chat about 3d modelling in our dedicated modelling channels:**
+<#510307234396241920>
+<#258761552520282112>
+<#510307351614455828>
+<#741990939626831932>
+''')
+            await member.send(embed=embed)
 
             # LOG
-            embed=discord.Embed(title="Member Accepted Rules", description=f"{member.mention} [{member}]")
+            embed = discord.Embed(title="Member Accepted Rules", description=f"{member.mention} [{member}]")
             await self.bot.get_channel(357705890046017536).send(embed=embed)
+
+            # WAIT
+            await asyncio.sleep(10)
+
+            # REMOVE REACTION
+            await message.remove_reaction('✅', member)
 
 
     @commands.command()
@@ -62,7 +101,7 @@ class Entry(commands.Cog):
     async def create_entry_widget(self, ctx):
         '''Create a reaction widget to allow entry to the server.'''
         
-        embed = discord.Embed(title="Agree to the Rules.", description="To indicate that you have read and agree to the server rules please react to this message with a green tick.")
+        embed = discord.Embed(title="Agree to the Rules.", description="To indicate that you have read and agree to the server rules please click / tap the green tick.")
         message = await ctx.send(embed=embed)
         await message.add_reaction('✅')
 
