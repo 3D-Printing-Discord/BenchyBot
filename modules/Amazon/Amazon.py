@@ -33,9 +33,9 @@ class Amazon(commands.Cog):
             if ('amazon' in s) or ('amzn' in s):
                 try:
                     if any([i in s for i in ['.co.uk', '.com', '.de']]):
-                        short_link = ('https://smile.' + re.search('ama*zo*n.*?\/', s)[0] + re.search('(dp|gp)\/.*?(\/|\?)', s)[0])
+                        short_link = ('https://smile.' + re.search('ama*zo*n.*?\/', s)[0] + re.search('\/(dp|gp)\/', s)[0][1:] + re.search('\/[a-zA-Z0-9]{10}\/', s)[0][1:])
                     else:
-                        short_link = ('https://www.' + re.search('ama*zo*n.*?\/', s)[0] + re.search('(dp|gp)\/.*?(\/|\?)', s)[0])
+                        short_link = ('https://www.' + re.search('ama*zo*n.*?\/', s)[0] + re.search('\/(dp|gp)\/', s)[0][1:] + re.search('\/[a-zA-Z0-9]{10}\/', s)[0][1:])
                     new_content = message.content.replace(s, short_link)
 
                     replace = True
@@ -63,7 +63,7 @@ class Amazon(commands.Cog):
             if force:
                 await self.replace_message(message, new_content)
             else:
-                if await bot_utils.await_react_confirm(message, self.bot, emoji='🤏', confirm_time=20, delete_after=True):
+                if await bot_utils.await_react_confirm(message, self.bot, emoji='🤏', confirm_time=20, delete_after=True, requires_poster=True):
                     await self.replace_message(message, bot_utils.sanitize_input(new_content))
 
     async def replace_message(self, message, new_message):
