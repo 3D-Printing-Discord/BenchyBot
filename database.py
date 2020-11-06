@@ -17,5 +17,5 @@ class DatabaseHandler:
                 result = None
                 self.conn.commit()
             else:
-                raise ValueError(f"Unexpected return_type '{return_type}'.")
+                return None
         return result
