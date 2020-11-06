@@ -221,7 +221,7 @@ async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60
     # DEF CHECK FOR RESPONSE
     def check(reaction, user):
         if requires_poster:
-            return str(reaction.emoji) == emoji and user != bot.user and confirm_message.id == reaction.message.id and user.id == message.author.id
+            return str(reaction.emoji) == emoji and user != bot.user and confirm_message.id == reaction.message.id and user.id == confirm_message.author.id
         else:
             return str(reaction.emoji) == emoji and user != bot.user and confirm_message.id == reaction.message.id
 
@@ -230,7 +230,7 @@ async def await_react_confirm(confirm_message, bot, emoji='✅', confirm_time=60
         reaction, user = await bot.wait_for('reaction_add', timeout=confirm_time, check=check)
         if delete_after: await confirm_message.clear_reactions()
         return True, user
-    except:
+    except Exception:
         if delete_after: await confirm_message.clear_reactions()
         return False, None
 
