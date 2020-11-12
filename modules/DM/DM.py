@@ -74,11 +74,11 @@ class DM(commands.Cog):
                 flipped_dict = {value:key for key, value in self.open_conversations.items()}
                 thread_message = await mail_channel.fetch_message(flipped_dict[message.author.id])
 
-                await self._add_embed_field(thread_message, f"Message [{datetime.datetime.now().strftime('%m/%d %H:%M')}]", message.content)
+                await self._add_embed_field(thread_message, f"Message [{datetime.datetime.now().strftime('%m/%d %H:%M')}]", f"> {message.content}")
 
             else:
                 thread_message = await self.create_thread(message.author)
-                await self._add_embed_field(thread_message, f"Message [{datetime.datetime.now().strftime('%m/%d %H:%M')}]", message.content)
+                await self._add_embed_field(thread_message, f"Message [{datetime.datetime.now().strftime('%m/%d %H:%M')}]", f"> {message.content[:950]}\nAttachments: {len(message.attachments)}")
 
             # RESPOND TO USER
             await message.author.send(self.config_data["bot_response"])
