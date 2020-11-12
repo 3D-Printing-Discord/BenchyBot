@@ -41,13 +41,14 @@ class Requests(commands.Cog):
 
         await message.delete()
 
-        if not await self.check_user(message.author):
+        # if not await self.check_user(message.author):
+        if False:
             try:
                 embed = discord.Embed(
                     title="Service Request",
                     description=self.config_data['reject_post_message']
                 )
-                await self.member.send(embed=embed)
+                await message.member.send(embed=embed)
                 DM=False
             except:
                 DM=True
@@ -104,7 +105,10 @@ class Requests(commands.Cog):
             title="✅ Service Request",
             description=f"{self.config_data['accept_post_message']}\n\n{self.config_data['disclaimer']}"
         )
-        await message.author.send(embed=embed)
+        try:
+            await message.author.send(embed=embed)
+        except:
+            await bot_utils.log(self.bot, title="Requests", color=bot_utils.red, ERROR=f"DM  Failed to Send to {message.author.name}")
 
     async def manage_response(self, payload):
         if not await self.check_offer(payload.member):
@@ -142,7 +146,11 @@ class Requests(commands.Cog):
                     A copy of the request is included below:\n"{msg.embeds[0].description[:750]}"
                     '''
             )
-            await payload.member.send(embed=embed)
+            try:
+                await payload.member.send(embed=embed)
+            except:
+                await bot_utils.log(self.bot, title="Requests", color=bot_utils.red, ERROR=f"DM  Failed to Send to {payload.member.name}")
+                print(f"Failed to connect {payload.member}")
 
     async def manage_deletion(self, payload):
         db_entry = self.bot.databasehandler.sqlquery(
