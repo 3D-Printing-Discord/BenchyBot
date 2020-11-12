@@ -18,6 +18,7 @@ import feedparser
 import html2markdown
 import datetime
 import asyncio
+import matplotlib
 # import cexprtk
 
 from PIL import Image
@@ -109,6 +110,49 @@ class Beta_Commands(commands.Cog):
 
 
     @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def ch_act(self, ctx, days=7):
+        '''Shows channel activity.'''
+        await ctx.send("Im doing it but this will take a few moments.")
+
+        result = []
+        data = []
+
+        timestamp = datetime.datetime.utcnow() - datetime.timedelta(days = int(days))
+
+        # CREATE PAGINATOR
+        print("Creating Paginator")
+        paginator = commands.Paginator(prefix='```\n', suffix='\n```')
+        paginator.add_line(f'--- Channels ({len(ctx.guild.channels)}) ---')
+
+        # ADD CHANNELS TO PAGINATOR
+        print("Getting histories")
+        for i, c in enumerate(ctx.guild.channels):
+
+            print(f"Now loading channel: {i:<3} of {len(ctx.guild.channels)}")
+
+            if isinstance(c, discord.TextChannel):
+                count = 0
+
+                async for message in c.history(after=timestamp, limit=None):
+                    count += 1
+                    print(f"  - Messages Loaded from channel {i}: {count}\r", end="")
+
+                print(count)
+                paginator.add_line(f"{c.name}, {count}")
+
+                data.append([c.name, count])
+
+        print("Sending Paginator")
+        # SEND PAGINATOR
+        for page in paginator.pages:
+            await ctx.send(page)
+        await ctx.send(ctx.author.mention)
+        # for c in ctx.guild.channels:
+        #     result.append(f"{c.name:>35}: 0")
+        # await ctx.send("\n".join(result))
+
+    @commands.command()
     async def ping(self, ctx):
         '''Latency Check.'''
         now = datetime.datetime.utcnow()
@@ -123,6 +167,22 @@ class Beta_Commands(commands.Cog):
         loop_time = out - _in 
 
         await msg.edit(content=f"__**Pong!**__```\n  IN: {in_time}\n OUT: {out_time}\nLOOP: {loop_time}```")
+
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def hist(self, ctx, member: discord.Member):
+        async for i in member.history(limit=10):
+            try:
+                await ctx.send(f"```\nMSG: {i.content[:1000]}\n\n\nFrom: {i.author}\nEmbeds: {len(i.embeds)}\nAttachments: {len(i.attachments)}\n```", files=[await n.to_file() for n in i.attachments], embed=self.list_get(i.embeds, 0))
+            except:
+                await ctx.send("Empty Message")
+
+    def list_get(self, lst, index, default=None):
+        try:
+            return lst[index]
+        except IndexError:
+            return default
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -564,6 +624,21 @@ class Beta_Commands(commands.Cog):
     async def set_status(self, ctx, *, status):
         activity=discord.Activity(type=discord.ActivityType.listening, name=status)
         await self.bot.change_presence(activity=activity)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def check_bg(self, ctx):
+        await ctx.send(f"```BG TASK ACTIVE: {self.bot.get_cog('HelpChannels').background_ActivityCheck.is_running()}```")
+
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def restart_bg(self, ctx):
+        try:
+            self.bot.get_cog('HelpChannels').background_ActivityCheck.start()
+            print("```BG TASK RESTARTED SUCCESSFULLY```")
+        except Exception as e:
+            print(e)
 
     # @commands.Cog.listener()
     # async def on_message(self, message):
