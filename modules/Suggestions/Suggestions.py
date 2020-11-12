@@ -56,7 +56,7 @@ class Suggestions(commands.Cog):
             else:
                 embed.add_field(name="Results", value="```No Votes Received```")
             embed.title = f'Poll By: {message.author.name} CLOSED'
-            await sent_message.edit(f"{message.author.mention}: Poll is complete.", embed=embed)
+            await sent_message.edit(content=f"{message.author.mention}: Poll is complete.", embed=embed)
 
 def setup(bot):
     bot.add_cog(Suggestions(bot))
