@@ -33,9 +33,9 @@ class User_Management(commands.Cog):
         channel_object = self.bot.get_channel(self.config_data['membership_channel'])
 
         if time_delta.days < 1:
-            embed=discord.Embed(title="New Member", description=f"{member.mention} [New Discord User: {time_delta.seconds / 60} mins]", color=bot_utils.green)
+            embed=discord.Embed(title="New Member", description=f"{member.mention} [{member.name}] [New Discord User: {time_delta.seconds / 60} mins]", color=bot_utils.green)
         else:
-            embed=discord.Embed(title="New Member", description=member.mention, color=bot_utils.green)
+            embed=discord.Embed(title="New Member", description=f"{member.mention} [{member.name}]", color=bot_utils.green)
 
         await channel_object.send(embed=embed)
 
