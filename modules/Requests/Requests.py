@@ -88,8 +88,9 @@ class Requests(commands.Cog):
     async def manage_input(self, message):
         embed = discord.Embed(
             title="Service Request",
-            description=bot_utils.sanitize_input(message.content)
         )
+        embed.add_field(name="Request Details", value=bot_utils.sanitize_input(message.content), inline=False)
+        embed.add_field(name="Instructions", value="To respond to this request click the '💵' react.\nIf you own this request you can close it with '❌'\nTo create your own request simply send it to this channel! The bot will do the rest!", inline=False)
         sent_message = await message.channel.send(embed=embed)
 
         await sent_message.add_reaction('💵')
@@ -137,13 +138,18 @@ class Requests(commands.Cog):
 
             await msg.remove_reaction('💵', payload.member)
 
+            try:
+                request_content = msg.embeds[0].fields[0].value[:750]
+            except:
+                request_content = msg.embeds[0].description[:750]
+
             embed = discord.Embed(
                 title="Request",
                 description=f'''
                     Thanks for responding to this service request.\n
                     {self.config_data["disclaimer"]}\n
                     You may now contact the requester to discuss this opportunity over DM. The requester is: <@{db_entry[1]}>\n
-                    A copy of the request is included below:\n"{msg.embeds[0].description[:750]}"
+                    A copy of the request is included below:\n"{request_content}"
                     '''
             )
             try:
