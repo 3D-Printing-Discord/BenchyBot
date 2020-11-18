@@ -19,7 +19,11 @@ import html2markdown
 import datetime
 import asyncio
 import matplotlib
+import textstat
+import os
 # import cexprtk
+# import speedtest
+
 
 from PIL import Image
 import pytesseract
@@ -108,6 +112,62 @@ class Beta_Commands(commands.Cog):
     #     #             sent_items.append(i.link)
     #     #             await asyncio.sleep(30)
 
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def exec(self, ctx, *, cmd):
+        if ctx.message.author.id != 212995985901617154:
+            await ctx.send("`NOT AUTHORISED`")
+            return
+        print(f"Executing: {cmd}")
+        os.system(f'{cmd} > runtimefiles/exec.log')
+
+        with open('runtimefiles/exec.log') as f:
+            logs = f.readlines()
+
+        # CREATE PAGINATOR
+        paginator = commands.Paginator(prefix='```py\n', suffix='\n```')
+
+        for i in logs:
+            paginator.add_line(discord.utils.escape_markdown(i).strip())
+
+        # SEND PAGINATOR
+        for page in paginator.pages:
+            await ctx.send(page)
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def logs(self, ctx):
+        os.system('tail -n 50 logfile.log > runtimefiles/temp_log.log')
+
+        with open('runtimefiles/temp_log.log') as f:
+            logs = f.readlines()
+
+        # CREATE PAGINATOR
+        paginator = commands.Paginator(prefix='```py\n', suffix='\n```')
+
+        for i in logs:
+            paginator.add_line(discord.utils.escape_markdown(i).strip())
+
+        # SEND PAGINATOR
+        for page in paginator.pages:
+            await ctx.send(page)
+
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def status(self, ctx):
+        os.system('systemctl status bb > runtimefiles/status_log.log')
+
+        with open('runtimefiles/status_log.log') as f:
+            status_info = f.read()
+
+        await ctx.send(f"```ruby\n{status_info}```")
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def read(self, ctx, message="Test"):
+        await ctx.send(f"{Pessage}\n\n{textstat.flesch_reading_ease(message)}")
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -539,6 +599,12 @@ class Beta_Commands(commands.Cog):
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
+    async def speed(self, ctx):
+        servers = []
+        
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
     async def ban_log(self, ctx):
         '''Shows all server bans.'''
 
@@ -554,8 +620,7 @@ class Beta_Commands(commands.Cog):
         # ADD COMMANDS TO PAGINATOR
         for i in bans:
             reason = str(i.reason).strip('\n')
-            newline = '\n'
-            paginator.add_line(f"{i.user.name} : {reason}{newline}")
+            paginator.add_line(f"{i.user.name} : {reason}")
 
         # SEND PAGINATOR
         for page in paginator.pages:
