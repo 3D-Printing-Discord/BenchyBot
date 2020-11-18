@@ -31,12 +31,19 @@ class Yeet(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.channel.id == 730178093444104272:
+            if message.author.id == self.bot.user.id:
+                return
+
             x = re.findall('(Y|y)(e|E){2,}(T|t)', message.content)
-            if x and message.author.id != self.bot.user.id:
+            if x:
+                print("yeet")
                 await message.add_reaction(":yeet:730210956793086034")
                 self.yeets = self.yeets + len(x)
                 if len(x) > 1:
                     await message.channel.send(f"```{COMBO}```")
+            else:
+                print("not a yeet")
+                await message.channel.send('GTFO.')
 
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
