@@ -1,6 +1,8 @@
 #!/usr/bin/python3.9
 
 import os
+os.chdir('root/Github/BenchyBot')
+
 import discord
 from discord.ext import commands
 import sys
