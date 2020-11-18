@@ -88,7 +88,10 @@ Chat about projects in <#690193739460640856>
 <#510307351614455828>
 <#741990939626831932>
 ''')
-            await member.send(embed=embed)
+            try:
+                await member.send(embed=embed)
+            except Exception:
+                pass
 
             # LOG
             embed = discord.Embed(title="Member Accepted Rules", description=f"{member.mention} [{member}]")
