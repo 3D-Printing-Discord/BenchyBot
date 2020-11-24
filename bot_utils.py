@@ -87,15 +87,19 @@ async def bot_log(bot, log):
         channel = bot.get_channel(695039236117889054)
         await channel.send(f"{log}")
 
-async def log(bot, title="Log", author=None, description=None, color=blue, **kwargs):
+async def log(bot, title="Log", author=None, description=None, color=blue, channel=None, DM = True, **kwargs):
+    if channel is None:
+        channel = bot.config['bot_log_channel']
+        
     embed=discord.Embed(title=title, description=description, color=color)
 
     for k, v in kwargs.items():
         embed.add_field(name=k, value=v, inline=False)
 
-    log_message = await bot.get_channel(bot.config['bot_log_channel']).send(embed=embed)
+    log_message = await bot.get_channel(channel).send(embed=embed)
 
-    await log_message.add_reaction('📩')
+    if DM:
+        await log_message.add_reaction('📩')
 
 async def await_mod_confirm(ctx, message, delete_after=True, confirm_time=10):
     '''
