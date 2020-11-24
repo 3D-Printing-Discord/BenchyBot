@@ -21,8 +21,10 @@ class Moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
-       target_channel = guild.get_channel(self.bot.config['bot_log_channel'])
-       await target_channel.send(f"{user} was just banned! (I think)")
+        target_channel = guild.get_channel(self.bot.config['bot_log_channel'])
+        await target_channel.send(f"{user} was just banned! (I think)")
+
+        await bot_utils.log(self.bot, title="Member Banned", Member=user)
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
