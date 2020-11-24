@@ -171,5 +171,8 @@ class Wiki(commands.Cog):
             await ctx.send(embed=embed)
 
 
+    async def cog_unload():
+        self.background_repo_update.stop()
+
 def setup(bot):
     bot.add_cog(Wiki(bot))

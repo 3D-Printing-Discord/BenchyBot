@@ -30,7 +30,7 @@ class Library(commands.Cog):
         if message.channel.id == 419972029463265280:
             if not message.author.id == OWNER:
                 meter = self.bot.databasehandler.sqlquery("SELECT * FROM Library", return_type='one')[0]
-                meter += 10
+                meter += 25
                 if meter > MAX:
                     meter = MAX
                 self.bot.databasehandler.sqlquery("UPDATE Library SET value=?", meter, return_type='commit')
@@ -72,6 +72,9 @@ class Library(commands.Cog):
         if meter < 0:
             meter = 0
         self.bot.databasehandler.sqlquery("UPDATE Library SET value=?", meter, return_type='commit')
+
+    async def cog_unload():
+        self.background_task.stop()
 
 
 def setup(bot):

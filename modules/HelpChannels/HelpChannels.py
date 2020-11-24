@@ -345,6 +345,9 @@ class HelpChannels(commands.Cog):
             traceback.print_exception(type(error), error, error.__traceback__)
             print(f"Channel ID: {self.channel_id}\nChannel Number: {self.channel_number}\nState: {self.state}\nOwner: {self.owner}\nTitle update at: {self.title_update_at}")
 
+    async def cog_unload():
+        self.background_ActivityCheck.stop()
+
 
 def setup(bot):
     bot.add_cog(HelpChannels(bot))
