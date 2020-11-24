@@ -36,13 +36,11 @@ class Yeet(commands.Cog):
 
             x = re.findall('(Y|y)(e|E){2,}(T|t)', message.content)
             if x:
-                print("yeet")
                 await message.add_reaction(":yeet:730210956793086034")
                 self.yeets = self.yeets + len(x)
                 if len(x) > 1:
                     await message.channel.send(f"```{COMBO}```")
             else:
-                print("not a yeet")
                 await message.channel.send('GTFO.')
 
     @commands.command()
