@@ -154,18 +154,18 @@ class SelfPromotion(commands.Cog):
         await ctx.send(f"Percentage of messages that are self-promotion for {member}:```{percentage*100:.2f} %```")
 
     def message_count(self, member):
-        search_date = datetime.datetime.utcnow() - datetime.timedelta(days=120)
-        self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND NOT channel=? AND date > ?", (member.id, self.config_data['promotion_channel'], search_date))
+        search_date = datetime.datetime.utcnow() - datetime.timedelta(days=30)
+        self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND NOT channel=? AND date>?", (member.id, self.config_data['promotion_channel'], search_date))
         non_promotion = self.c.fetchall()
 
         return len(non_promotion)
 
     def calc_percentage(self, member):
-        search_date = datetime.datetime.utcnow() - datetime.timedelta(days=120)
-        self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND NOT channel=? AND date > ?", (member.id, self.config_data['promotion_channel'], search_date))
+        search_date = datetime.datetime.utcnow() - datetime.timedelta(days=30)
+        self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND NOT channel=? AND date>?", (member.id, self.config_data['promotion_channel'], search_date))
         non_promotion = self.c.fetchall()
         
-        self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND channel=? AND date > ?", (member.id, self.config_data['promotion_channel'], search_date))
+        self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND channel=? AND date>?", (member.id, self.config_data['promotion_channel'], search_date))
         promotion = self.c.fetchall()
 
         try:
