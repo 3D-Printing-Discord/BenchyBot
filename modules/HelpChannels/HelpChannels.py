@@ -200,16 +200,18 @@ class Help_Channel:
 
     async def message_quality_check(self, message):
 
-        length_check = len(message.content) < 200
+        length_check = len(message.content) < 175
         images_check = len(message.attachments)<1
             
-        length_string = "**Your question looks a bit short!**\nConsider including some more information with it such as:\n- Printer make and model\n- Any Mods\n- Firmware\n- Filament material and temps\n- What slicer you are using\n- Any recent changes you have made\n- What have you tried so far"
-        images_string = "**Images can really help with debugging a printer!**\nConsider adding some to your post of:\n- The print\n- The printer"
+        length_string = "**Your question looks a bit short!**\nConsider including some more information with it such as: Printer make and model, any Mods, firmware, filament material and temps, slicer, any recent changes, what have you tried so far."
+        images_string = "**Images can really help with debugging a printer!**\nConsider adding some to your post of: the print, the printer."
 
         result = length_check * length_string + "\n\n" + images_check * images_string
 
         if length_check or images_check:
-            await message.channel.send(embed=discord.Embed(title="Could You Include More Info?", description=result))
+            msg_more_info = await message.channel.send(embed=discord.Embed(title="Could You Include More Info?", description=result))
+            await asyncio.sleep(60)
+            await msg_more_info.delete()
 
     def time_since_last_update(self):
         if self.title_update_at:
