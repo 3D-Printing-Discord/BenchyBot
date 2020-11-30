@@ -143,12 +143,14 @@ class Requests(commands.Cog):
             except:
                 request_content = msg.embeds[0].description[:750]
 
+            member = channel.guild.get_member(db_entry[1])
+
             embed = discord.Embed(
                 title="Request",
                 description=f'''
                     Thanks for responding to this service request.\n
                     {self.config_data["disclaimer"]}\n
-                    You may now contact the requester to discuss this opportunity over DM. The requester is: <@{db_entry[1]}>\n
+                    You may now contact the requester to discuss this opportunity over DM. The requester is: {member.mention} [{member}]\n
                     A copy of the request is included below:\n"{request_content}"
                     '''
             )
