@@ -1,10 +1,10 @@
-
 import discord
 from discord.ext import commands
 import json
 import bot_utils
 import re
 from urllib.parse import urlparse
+from .amazon_url_utils import shorten_amazon_url
 
 
 class Amazon(commands.Cog):
@@ -32,10 +32,7 @@ class Amazon(commands.Cog):
         for s in urls:
             if ('amazon' in s) or ('amzn' in s):
                 try:
-                    if any([i in s for i in ['.co.uk', '.com', '.de']]):
-                        short_link = ('https://smile.' + re.search('ama*zo*n.*?\/', s)[0] + re.search('\/(dp|gp)\/', s)[0][1:] + re.search('\/[a-zA-Z0-9]{10}\/', s)[0][1:])
-                    else:
-                        short_link = ('https://www.' + re.search('ama*zo*n.*?\/', s)[0] + re.search('\/(dp|gp)\/', s)[0][1:] + re.search('\/[a-zA-Z0-9]{10}\/', s)[0][1:])
+                    short_link = shorten_amazon_url(s)
                     new_content = message.content.replace(s, short_link)
 
                     replace = True
