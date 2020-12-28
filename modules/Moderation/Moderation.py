@@ -21,10 +21,7 @@ class Moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
-        target_channel = guild.get_channel(self.bot.config['bot_log_channel'])
-        await target_channel.send(f"{user} was just banned! (I think)")
-
-        await bot_utils.log(self.bot, title="Member Banned", Member=user)
+        await bot_utils.log(self.bot, title="Member Banned", Member=user, color=bot_utils.red)
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -64,32 +61,47 @@ class Moderation(commands.Cog):
             await ctx.author.send("Warning was not issued: Could not find the user.")
             ctx.handled_in_local = True
 
-
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def show_infractions(self, ctx, member: discord.Member, range=None):
+    async def show_infractions(self, ctx, *, member):
         '''Shows the number and type of infractions a user has collected.'''
+
+        banned_string = False
+
+        try:
+            member = await commands.MemberConverter().convert(ctx, member)
+        except:
+            bans = await ctx.guild.bans()
+            
+            try:
+                ban_entry = [i for i in await ctx.guild.bans() if i.user.name == member][0]
+                member = ban_entry.user
+                banned_string = str(ban_entry.reason)
+            except: 
+                await ctx.send("Member Not Found!")
+                return
         
-        if range is not None:
-            self.c.execute("SELECT * FROM Moderation_warnings WHERE user_id=?", (member.id, ))
-            results = self.c.fetchall()
-        else:
-            search_date = datetime.datetime.utcnow() - datetime.timedelta(days=120)
-            self.c.execute("SELECT * FROM Moderation_warnings WHERE user_id=? AND timestamp > ?", (member.id, search_date))
-            results = self.c.fetchall()
+        self.c.execute("SELECT * FROM Moderation_warnings WHERE user_id=?", (member.id,))
+        results = self.c.fetchall()
         
         inf = {'1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0}
         for v in results:
             inf[v[2]] += 1
 
-        output = []
-        for k, v in inf.items():
-            if v != 0:
-                output.append(f"Rule {k}: {v}")
-        
+        output = [f"Rule {k}: {v}" for k, v in inf.items() if v != 0]
         out_string = "\n".join(output)
 
-        await ctx.send(f"{len(results)} warning(s) recorded for {member}\n```\n{out_string}```")
+        out_list = [f"[Rule: {i[2]}]({i[3]})" for i in results]
+        out_list_string = '\n'.join(out_list)
+
+        embed = discord.Embed(title=f"Infractions for {member.name}", color=bot_utils.red)
+        if banned_string:
+            embed.add_field(name="User is Banned:", value=f"Reason: {banned_string}", inline=False)
+        if out_string:
+            embed.add_field(name="Infractions Total", value=out_string, inline=False)
+        if out_list_string:
+            embed.add_field(name="Infractions List", value=out_list_string, inline=False)
+        await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, RawReactionActionEvent):
