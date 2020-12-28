@@ -1,5 +1,5 @@
 {
-    "help_channels": [167662527755321344, 395260585895264257, 532010913507835914, 564767040221609994, 592153899775950858, 676921358403240026, 782981839799058442],
+    "help_channels": [167662527755321344, 395260585895264257, 532010913507835914, 564767040221609994, 592153899775950858, 676921358403240026, 782981839799058442, 792116933826838539],
     "timeout": 3600,
     "channel_name": "<emoji>｜help-<number>-<status>",
     "available_message": "This help channel is now **available**, which means that you can claim it by simply typing your question into it. Once claimed, the channel will be yours until it has been inactive for 60 mins. When that happens it will be made available again for another user.\n\nTry to write the best question you can by **providing a detailed description and photos** and telling us what you've tried already. Please make sure to read the troubleshooting guides in <#758751108419551242> first!",

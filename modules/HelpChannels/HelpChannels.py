@@ -239,11 +239,6 @@ class HelpChannels(commands.Cog):
         for index, chan_id in enumerate(self.config_data['help_channels'], start=1):
             self.help_channel_list[chan_id] = Help_Channel(self.bot, index, self.config_data, chan_id)
 
-        # CREATE EMBEDS
-        # self.available_embed = discord.Embed(title="Channel Available", description=self.config_data['available_message'], color=bot_utils.green)
-        # self.closed_embed = discord.Embed(title="Channel Closed", description=self.config_data['closed_message'], color=bot_utils.red)
-        # self.directMessage_embed = discord.Embed(title="Channel Allocated", description=self.config_data['direct_message'], color=bot_utils.green)
-
         # START BACKGROUND TASKS
         if self.config_data['timeout'] != 0:
             self.background_ActivityCheck.start()
@@ -281,7 +276,14 @@ class HelpChannels(commands.Cog):
             await help_channel._to_active(message.author)
         else:
             if DEBUG: print("No action")
-                 
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def add_help_channel(self, index, chan_id):
+        '''NOT TESTED - Adds a channel to the help catagory at runtime.'''
+        self.help_channel_list[index] = Help_Channel(self.bot, index, self.config_data, chan_id)
+
+
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
     async def end_help(self, message):
