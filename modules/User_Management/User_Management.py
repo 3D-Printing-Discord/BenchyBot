@@ -46,7 +46,7 @@ class User_Management(commands.Cog):
         embed=discord.Embed(title="Member Left", description=f"{member} : {member.mention}", color=bot_utils.red)
         await channel_object.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=['membership'])
     @commands.has_any_role(*bot_utils.admin_roles)
     @commands.check(bot_utils.is_secret_channel)
     async def membership_info(self, ctx):
@@ -62,7 +62,7 @@ class User_Management(commands.Cog):
             # CREATE EMBED
             embed = discord.Embed(title=f"Membership Info", description=f"Membership info for {ctx.guild}", color=bot_utils.green)
 
-            embed.add_field(name="Total Members:", value=len(members), inline=True)
+            embed.add_field(name="Total Members:", value=ctx.guild.member_count, inline=True)
 
             embed.add_field(name="Online:", value=len([member for member in members if member.status == discord.Status.online]), inline=True)
 
@@ -90,6 +90,8 @@ class User_Management(commands.Cog):
             plt.xlabel('Date')
             plt.ylabel('Users')
             plt.title('User Growth')
+            plt.grid()
+            plt.tight_layout()
 
             # SAVE IMAGE
             if os.path.isfile('runtimefiles/user_graph.png'):
@@ -100,14 +102,11 @@ class User_Management(commands.Cog):
             ### --- USER ACTIVITY --- ###
 
             # GET ACTIVITY NUMBERS
-            self.c.execute("SELECT * FROM User_Activity")
-            user_activity = self.c.fetchall()
+            timestamp = datetime.datetime.utcnow() - datetime.timedelta(days=7)
+            user_activity = self.bot.databasehandler.sqlquery("SELECT * FROM User_Activity WHERE time_stamp>?", timestamp, return_type='all')
 
-            trimmed_data = user_activity[-672:]
-
-            # print(len(trimmed_data))
-            # print(trimmed_data[0])
-            # print(trimmed_data[-1])
+            # trimmed_data = user_activity[-672:]
+            trimmed_data = user_activity
 
             x_data = [datetime.datetime.strptime(d[0], '%Y-%m-%d %H:%M:%S.%f') for d in trimmed_data]
             y_data = [int(d[1]) for d in trimmed_data]
@@ -117,6 +116,7 @@ class User_Management(commands.Cog):
             plt.xlabel('Date')
             plt.ylabel('Active Users')
             plt.title('7-Day User Activity')
+            plt.tight_layout()
 
             # SAVE IMAGE
             if os.path.isfile('runtimefiles/user_activity.png'):
@@ -132,7 +132,7 @@ class User_Management(commands.Cog):
             user_activity = self.c.fetchall()
 
             # trimmed_data = user_activity[:1344]
-            trimmed_data = user_activity[-672:]
+            trimmed_data = user_activity[-2688:]
 
             x_data = [datetime.datetime.strptime(d[0], '%Y-%m-%d %H:%M:%S.%f') for d in trimmed_data]
             y_data = [d[2] for d in trimmed_data]
@@ -141,7 +141,8 @@ class User_Management(commands.Cog):
             plt.plot(x_data,y_data, color="black")
             plt.xlabel('Date')
             plt.ylabel('Users')
-            plt.title('7-Day User Numbers')
+            plt.title('28-Day User Numbers')
+            plt.tight_layout()
 
             # SAVE IMAGE
             if os.path.isfile('runtimefiles/7-day-users.png'):
@@ -157,6 +158,7 @@ class User_Management(commands.Cog):
             plt.xlabel('Date')
             plt.ylabel('Users')
             plt.title('7-Day User Change')
+            plt.tight_layout()
 
             # SAVE IMAGE
             if os.path.isfile('runtimefiles/7-user-change.png'):
@@ -276,6 +278,9 @@ class User_Management(commands.Cog):
 
         self.c.execute("INSERT INTO User_Activity(time_stamp, online, total_users) VALUES (?, ?, ?)", (datetime.datetime.utcnow(), online_members, len(members)))
         self.conn.commit()
+
+    async def cog_unload():
+        self.user_activity_check.stop()
 
 def setup(bot):
     bot.add_cog(User_Management(bot))
