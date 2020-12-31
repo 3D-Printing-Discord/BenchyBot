@@ -92,7 +92,7 @@ bot = commands.Bot(
 bot.config = config_data
 
 # ATTACH BOT INFO
-bot.version = "v1.0.0"
+bot.version = str(discord.__version__)
 bot.start_time = datetime.datetime.utcnow()
 
 # CONNECT TO DATABASE
