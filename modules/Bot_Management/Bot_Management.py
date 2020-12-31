@@ -27,7 +27,7 @@ class Bot_Management(commands.Cog):
         embed = discord.Embed(title=f"Bot Info", description="", color=bot_utils.green)
 
         # DECLARE BOT VERSION 
-        embed.add_field(name="Bot Version", value=self.bot.version, inline=False)
+        embed.add_field(name="Discord.py Version", value=self.bot.version, inline=False)
 
         # DECLARE MODULES
         embed.add_field(name=f"Loaded Modules ({len(self.bot.cogs)})", value="\n".join([f"{m} - {v.version}" for m, v in self.bot.cogs.items()]), inline=False)
