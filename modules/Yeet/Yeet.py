@@ -34,14 +34,14 @@ class Yeet(commands.Cog):
             if message.author.id == self.bot.user.id:
                 return
 
-            x = re.findall('(Y|y)(e|E){2,}(T|t)', message.content)
+            x = re.findall('(H|h)(o|O)(n|N)(K|k)', message.content)
             if x:
-                await message.add_reaction(":yeet:730210956793086034")
+                await message.add_reaction(":honk:783237086823972865")
                 self.yeets = self.yeets + len(x)
                 if len(x) > 1:
                     await message.channel.send(f"```{COMBO}```")
             else:
-                await message.channel.send('GTFO.')
+                await message.channel.send('<:nonk:783242851068280845>')
 
     @commands.command()
     @commands.has_any_role(*bot_utils.reg_roles)
