@@ -18,9 +18,15 @@ import feedparser
 import html2markdown
 import datetime
 import asyncio
-import matplotlib
+from matplotlib import pyplot as plt
+import numpy as np
 import textstat
 import os
+from PIL import Image, ExifTags
+import io
+import ffmpeg
+import sqlite3
+
 # import cexprtk
 # import speedtest
 
@@ -67,6 +73,9 @@ class Beta_Commands(commands.Cog):
         self.yeets = 0
         self.live = True
         self.voted = []
+
+        self.conn = sqlite3.connect(self.bot.config['database'])
+        self.c = self.conn.cursor()
  
         # self.config_data = []
         # with open('modules/Beta_Commands/config.json') as f:
@@ -112,6 +121,132 @@ class Beta_Commands(commands.Cog):
     #     #             sent_items.append(i.link)
     #     #             await asyncio.sleep(30)
 
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def help_demand(self, ctx):
+        '''
+        Shows demand on the help channels over time.
+        '''
+        
+        search_date = datetime.datetime.utcnow() - datetime.timedelta(days=5)
+        result = self.bot.databasehandler.sqlquery(
+            "SELECT * FROM HelpChannels_demand WHERE timestamp>?",
+            search_date,
+            return_type='all',
+        )
+        
+        timestamp, demand = zip(*result)
+        timestamp = [i[5:16] for i in timestamp]
+
+        # PLOT AND SET TITLES 
+        plt.plot(timestamp, demand, color="black")
+        plt.xlabel('Date')
+        plt.ylabel('Channels in use')
+        plt.title('Help Channel Demand')
+        plt.yticks(np.arange(0, 10, step=1))
+        plt.xticks(rotation='vertical')
+        plt.grid(axis='y')
+        plt.tight_layout()
+
+        # SAVE IMAGE
+        if os.path.isfile('runtimefiles/help_demand.png'):
+            os.remove('runtimefiles/help_demand.png')
+        plt.savefig('runtimefiles/help_demand.png')
+        plt.clf() 
+
+        loaded_file_1 = discord.File("runtimefiles/help_demand.png", filename="image1.png")
+        await ctx.send(file=loaded_file_1)
+
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def message_count(self, ctx, member: discord.Member, days=30):
+
+        search_date = datetime.datetime.utcnow() - datetime.timedelta(days=int(days))
+        self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND date>?", (member.id, search_date))
+        total = self.c.fetchall()
+
+        await ctx.send(len(total))
+        # self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=?", (ctx.author.id))
+        # total_all = self.c.fetchall()
+
+        # await ctx.send(f"Total: {total_all}\nTotal (30-day): {total}")
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def order66(self, ctx, amount=None):
+        await ctx.send('https://tenor.com/view/star-wars-chancellor-dark-side-plan-evil-jedi-gif-7689991')
+        
+        await asyncio.sleep(3)
+
+        await ctx.send('https://tenor.com/view/yes-my-lord-star-wars-yes-my-lord-gif-video-game-gif-17937721')
+
+        await asyncio.sleep(3)
+
+        await ctx.send('https://tenor.com/view/yoda-dies-inside-dead-hurt-gif-10373479')
+        
+        await asyncio.sleep(3)
+
+        await ctx.send('https://tenor.com/view/star-wars-order66-gif-10141605')
+
+        await asyncio.sleep(3)
+
+        await ctx.send('https://tenor.com/view/star-wars-gif-18223629')
+
+        await asyncio.sleep(3)
+
+        await ctx.send('https://tenor.com/view/order66-star-wars-vader-killing-younglings-anakin-gif-17215171')
+
+        await asyncio.sleep(3)
+
+        await ctx.send(f'{ctx.author.mention}\n`KICKING ALL MEMBERS`\n`Reply STOP to end`')
+
+        await asyncio.sleep(10)
+
+        await ctx.send(f'{ctx.author.mention}\n`DELETING CHANNELS`\n`Reply STOP to end`')
+
+        await asyncio.sleep(10)
+
+        await ctx.send(f'{ctx.author.mention}\n`DELETING ALL THE BENCHIES`\n`Reply STOP to end`')
+
+        await asyncio.sleep(10)
+
+
+    @commands.command()
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def purge(self, ctx, amount=None, member: discord.Member=None):
+        await ctx.message.delete()
+
+        if amount is None:
+            await ctx.send("Include an amount")
+            return
+
+        try:
+            amount = int(amount)
+        except:
+            await ctx.send("Not a number")
+            return
+
+        def check(m):
+            if member is None:
+                print("in none")
+                return True
+            else:
+                return m.author == member
+
+        deleted = await ctx.channel.purge(limit=amount, check=check)
+
+        # CREATE PAGINATOR
+        paginator = commands.Paginator(prefix='```\n', suffix='\n```')
+        paginator.add_line(f"Purged {len(deleted)} messages:\n")
+
+        for i in deleted:
+            paginator.add_line(f"{i.author}:\n{discord.utils.escape_markdown(i.content).strip()[:1000]}\n")
+
+        # SEND PAGINATOR
+        for page in paginator.pages:
+             await self.bot.get_channel(self.bot.config['bot_log_channel']).send(page)
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -313,6 +448,28 @@ class Beta_Commands(commands.Cog):
         await ctx.message.attachments[0].save("runtimefiles/ocrimage.png")
         await ctx.send(pytesseract.image_to_string(Image.open("runtimefiles/ocrimage.png")))
 
+    # @commands.command()
+    # async def christmas(self, ctx):
+    #     links = [
+    #         'https://www.thingiverse.com/thing:574999',
+    #         'https://www.thingiverse.com/thing:585485',
+    #         'https://www.thingiverse.com/thing:1955017',
+    #         'https://www.thingiverse.com/thing:194112',
+    #         'https://www.thingiverse.com/thing:2718988',
+    #         'https://www.thingiverse.com/thing:1225107',
+    #         'https://www.thingiverse.com/thing:1637450',
+    #         'https://www.thingiverse.com/thing:4669248',
+    #         'https://www.thingiverse.com/thing:207430',
+    #         'https://www.thingiverse.com/thing:1249491',
+    #         'https://www.thingiverse.com/thing:1980434',
+    #         'https://www.thingiverse.com/thing:201018',
+    #         'https://www.thingiverse.com/thing:579088',
+    #         'https://www.prusaprinters.org/prints/48741-modern-xmas-tree-2020'
+
+    #     ]
+    #     link_list = '\n'.join(f"<{i}>" for i in links)
+    #     await ctx.send(f"Heres some christmas prints:\n{link_list}")
+
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -332,7 +489,16 @@ class Beta_Commands(commands.Cog):
     @commands.has_any_role(*bot_utils.admin_roles)
     async def embed(self, ctx, *, message):
         await ctx.message.delete()
+        
+        # try:
+        image = re.search('<<.*>>', message)[0]
+        message = message.replace(image, '')
         embed=discord.Embed(description=message)
+        embed.set_image(url=image[2:-2])
+        # except: 
+        #     print("Erroring")
+        #     embed=discord.Embed(description=message)
+
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -462,6 +628,23 @@ class Beta_Commands(commands.Cog):
         self.voted.append(user)
         return [k, user, score]
 
+    @commands.command()
+    @commands.check(bot_utils.is_bot_channel)
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def get_cont(self, ctx, channel_id=None):
+
+        channel = ctx.guild.get_channel(int(channel_id))
+
+        await ctx.send(channel)
+
+        result = []
+        async for message in channel.history(limit=None):
+            result.append(f"### {message.created_at}\n{message.content}\n\n")
+
+        with open("runtimefiles/channel_contents.txt", 'w') as f:
+            f.writelines(result)
+
+        await ctx.send("Done")
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
@@ -469,7 +652,7 @@ class Beta_Commands(commands.Cog):
     async def after_dark(self, ctx):
         await ctx.message.delete()
 
-        await ctx.author.send("This is a test message which should contain an invitation! As soon as Acid lets me know what text he wants here I shall make it so!")
+        await ctx.author.send("This is a test message which should contain an invitation! As soon as someone lets me know what text he wants here I shall make it so!")
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
@@ -517,24 +700,13 @@ class Beta_Commands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        prefixes = ['!', '^']
-
-        for p in prefixes:
-            if message.content.startswith(p):
-                try:
-                    if not (message.content[1] == p or message.content[1] == ' '):
-                        embed=discord.Embed(description=f"The `{p}` prefix is now obsolete and may be removed. Consider switching to the new `?` prefix for commands.")
-                        await message.channel.send(embed=embed)
-                except Exception:
-                    pass
-
-
-        if message.content.startswith(('^help', '!help')):
+       
+        if message.content.startswith(('^help', '!help', '.help')):
             embed=discord.Embed(description="Try `?help`")
             await message.channel.send(embed=embed)
 
-        if message.content.startswith("^rolelist") or message.content.startswith("^addrole"):
-            await message.channel.send("Hello,\n\nBecause there is a limit on the max number of roles, we are unable to continue adding each new printer that releases. We will be restructuring printer roles in the future so stay tuned!")
+        # if "benchybot" in message.content.lower().split() and message.author != self.bot.user:
+        #     await message.channel.send('👀')
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
