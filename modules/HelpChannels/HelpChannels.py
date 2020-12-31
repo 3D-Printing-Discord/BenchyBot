@@ -5,6 +5,7 @@ import datetime
 import bot_utils
 import asyncio
 import re
+from matplotlib import pyplot as plt
 
 DEBUG = False
 
@@ -243,6 +244,8 @@ class HelpChannels(commands.Cog):
         if self.config_data['timeout'] != 0:
             self.background_ActivityCheck.start()
 
+        self.background_demand_log.start()
+
     @commands.Cog.listener()
     async def on_message(self, message):
 
@@ -321,7 +324,7 @@ class HelpChannels(commands.Cog):
         if help_channel.owner == ctx.author.name or await bot_utils.is_mod(ctx):
             await help_channel._to_close()
         else:
-            await ctx.send("You dont have permission to do that!")
+            await ctx.send("You don't have permission to do that!")
             return
 
     @tasks.loop(seconds=60)
@@ -345,13 +348,30 @@ class HelpChannels(commands.Cog):
     async def post_loop(self):
         if self.background_ActivityCheck.failed():
             import traceback
-            error = self.your_task.get_task().exception()
+            error = self.background_ActivityCheck.get_task().exception()
             traceback.print_exception(type(error), error, error.__traceback__)
             print(f"Channel ID: {self.channel_id}\nChannel Number: {self.channel_number}\nState: {self.state}\nOwner: {self.owner}\nTitle update at: {self.title_update_at}")
 
+
+    @tasks.loop(seconds=300)
+    async def background_demand_log(self):
+        actives = sum([v.state != 'AVAILABLE' for k, v in self.help_channel_list.items()])
+        self.bot.databasehandler.sqlquery(
+            "INSERT INTO HelpChannels_demand(timestamp, active_channels) VALUES (?, ?)",
+            datetime.datetime.utcnow(), actives,
+            return_type='commit'
+        )
+
+    @background_demand_log.after_loop
+    async def post_loop_demand(self):
+        if self.background_demand_log.failed():
+            import traceback
+            error = self.background_demand_log.get_task().exception()
+            traceback.print_exception(type(error), error, error.__traceback__)
+
     async def cog_unload():
         self.background_ActivityCheck.stop()
-
+        self.background_demand_log.stop()
 
 def setup(bot):
     bot.add_cog(HelpChannels(bot))
