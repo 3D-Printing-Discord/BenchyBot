@@ -320,8 +320,7 @@ class HelpChannels(commands.Cog):
 
         help_channel = self.help_channel_list[ctx.channel.id]
 
-        if DEBUG: print("----------\n", help_channel.owner == ctx.author.name, '\n', ctx.author.name, help_channel.owner, '\n',  await bot_utils.is_mod(ctx), "\n----------")
-        if help_channel.owner == ctx.author.name or await bot_utils.is_mod(ctx):
+        if help_channel.owner == ctx.author.name or await bot_utils.is_reg(ctx):
             await help_channel._to_close()
         else:
             await ctx.send("You don't have permission to do that!")
