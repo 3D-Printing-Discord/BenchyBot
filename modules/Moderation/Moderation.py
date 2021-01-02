@@ -4,7 +4,7 @@ from discord.ext import commands
 import json
 import bot_utils
 import datetime
-import sqlite3
+
 
 class Moderation(commands.Cog):
     version = "v0.1"
@@ -16,23 +16,24 @@ class Moderation(commands.Cog):
         with open('modules/Moderation/config.json') as f:
             self.config_data = json.load(f)
 
-        self.conn = sqlite3.connect(self.bot.config['database'])
-        self.c = self.conn.cursor()
-
     @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
         await bot_utils.log(self.bot, title="Member Banned", Member=user, color=bot_utils.red)
 
     @commands.command(aliases=['warn'])
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def rule(self, ctx, rule_number, member: discord.Member=None):
+    async def rule(self, ctx, rule_number, member: discord.Member = None):
         '''Shows a server rule or issues a warning.'''
 
         await ctx.message.delete()
 
-        embed = discord.Embed(title=f"Rule {rule_number}", description=self.config_data['rules'][rule_number], color=bot_utils.red)
+        embed = discord.Embed(
+            title=f"Rule {rule_number}",
+            description=self.config_data['rules'][rule_number],
+            color=bot_utils.red
+        )
         embed.set_footer(text=f"Sent by: {ctx.author}")
-        
+
         if member:
             embed.set_author(name=f"{member} please see the rule below:")
 
@@ -70,27 +71,29 @@ class Moderation(commands.Cog):
     @commands.command(aliases=['warns'])
     @commands.has_any_role(*bot_utils.admin_roles)
     async def show_infractions(self, ctx, *, member):
-        '''Shows the number and type of infractions a user has collected.'''
+        '''
+        Shows the number and type of infractions a user has collected.
+        '''
 
         try:
             member = await commands.MemberConverter().convert(ctx, member)
             banned_string = False
-        except:            
+        except discord.ext.commands.MemberNotFound:
             try:
                 ban_entry = [i for i in await ctx.guild.bans() if i.user.name == member][0]
                 member = ban_entry.user
                 banned_string = str(ban_entry.reason)
-            except: 
+            except IndexError:
                 await ctx.send("Member Not Found!")
                 return
-        
+
         results = self.bot.databasehandler.sqlquery(
             "SELECT * FROM Moderation_warnings WHERE user_id=?",
             member.id,
             return_type='all'
         )
-        
-        warnings = {'1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0}
+
+        warnings = {'1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0}
         for i in results:
             warnings[i[2]] += 1
 
@@ -125,7 +128,8 @@ class Moderation(commands.Cog):
             embed.add_field(name="Attachments", value=len(message.attachments), inline=False)
 
             await self.bot.get_guild(RawReactionActionEvent.guild_id).get_channel(self.bot.config['bot_log_channel']).send(embed=embed, files=[await i.to_file() for i in message.attachments])
-            await message.delete()  
+            await message.delete()
+
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
