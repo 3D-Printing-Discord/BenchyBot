@@ -109,38 +109,6 @@ class SelfPromotion(commands.Cog):
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def selfpromotion_whitelist(self, ctx):
-        '''View the whitelist of sites for the self promotion module.'''
-        sites = self.bot.databasehandler.sqlquery('SELECT * FROM SelfPromotion_whitelist', return_type='all')
-
-        # CREATE PAGINATOR
-        paginator = commands.Paginator(prefix='```\n', suffix='\n```')
-        paginator.add_line(f'--- WHITELIST SITES ({len(sites)}) ---\nIf a message contains any of the following terms it will be allowed.\n---------------------------')
-
-        # ADD COMMANDS TO PAGINATOR
-        for s in sites:
-            paginator.add_line(f"{s[0]}")
-
-        # SEND PAGINATOR
-        for page in paginator.pages:
-            await ctx.send(page, delete_after=60)
-
-    @commands.command()
-    @commands.has_any_role(*bot_utils.admin_roles)
-    async def selfpromotion_whitelist_add(self, ctx, term):
-        '''Adds an entry to the self promotion whitelist.'''
-        if await bot_utils.await_confirm(ctx, f"Add '`{term}`' to the whitelist?", delete_after=False, confirm_time=60):
-            self.bot.databasehandler.sqlquery('INSERT INTO SelfPromotion_whitelist(site) VALUES (?)', term, return_type='commit')
-
-    @commands.command()
-    @commands.has_any_role(*bot_utils.admin_roles)
-    async def selfpromotion_whitelist_remove(self, ctx, term):
-        '''Removes an entry from the self promotion whitelist.'''
-        if await bot_utils.await_confirm(ctx, f"Remove '`{term}`' from the whitelist?", delete_after=False, confirm_time=60):
-            self.bot.databasehandler.sqlquery('DELETE FROM SelfPromotion_whitelist WHERE site=?', term, return_type='commit')
-
-    @commands.command()
-    @commands.has_any_role(*bot_utils.admin_roles)
     async def selfpromotion(self, ctx, member: discord.Member=None):
         '''
         Provides percentage of posts that are self promotion.
