@@ -79,8 +79,10 @@ class Blacklist(commands.Cog):
     @commands.has_any_role(*bot_utils.admin_roles)
     async def view_banned_terms(self, ctx):
         '''Shows the currently blacklisted terms.'''
-        self.c.execute(f"SELECT * FROM Blacklist")
-        banned_terms = self.c.fetchall()
+        banned_terms = self.bot.databasehandler.sqlquery(
+            "SELECT * FROM Blacklist",
+            return_type='all'
+        )
 
         terms = "\n".join(str(t[0]) for t in banned_terms)
 
