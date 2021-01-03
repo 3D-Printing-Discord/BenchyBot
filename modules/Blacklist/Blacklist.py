@@ -14,9 +14,6 @@ class Blacklist(commands.Cog):
         with open('modules/Blacklist/config.json') as f:
             self.config_data = json.load(f)
 
-        self.conn = sqlite3.connect(self.bot.config['database'])
-        self.c = self.conn.cursor()
-
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author == self.bot.user:
@@ -28,8 +25,10 @@ class Blacklist(commands.Cog):
             pass
             # print(f"ERROR USER: {message.author}")
 
-        self.c.execute("SELECT * FROM Blacklist")
-        banned_terms = self.c.fetchall()
+        banned_terms = self.bot.databasehandler.sqlquery(
+            "SELECT * FROM Blacklist",
+            return_type='all'
+        )
 
         # Delete messages
         for s in banned_terms:
@@ -52,8 +51,11 @@ class Blacklist(commands.Cog):
         term = term.lower()
 
         try:
-            self.c.execute("INSERT INTO Blacklist(term) VALUES (?)", (term,))
-            self.conn.commit()
+            self.bot.databasehandler.sqlquery(
+                "INSERT INTO Blacklist(term) VALUES (?)",
+                term,
+                return_type='commit'
+            )
             await ctx.send(f"'{term}' added to blacklist!")
         except:
             await ctx.send(f"'{term}' failed to add to blacklist!")
@@ -64,8 +66,11 @@ class Blacklist(commands.Cog):
         """Removes blacklisted terms from the database"""
         # Load blacklist terms
         try:
-            self.c.execute("DELETE FROM Blacklist WHERE term=?", (term,))
-            self.conn.commit() 
+            self.bot.databasehandler.sqlquery(
+                "DELETE FROM Blacklist WHERE term=?",
+                term,
+                return_type='commit'
+            )
             await ctx.send(f"'{term}' removed from blacklist!")
         except:
             await ctx.send(f"'{term}' failed to remove from blacklist!")
