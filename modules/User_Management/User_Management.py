@@ -22,29 +22,47 @@ class User_Management(commands.Cog):
         if self.config_data['activity_check'] != 0:
             self.user_activity_check.start()
 
-        self.conn = sqlite3.connect(self.bot.config['database'])
-        self.c = self.conn.cursor()
-
     @commands.Cog.listener()
     async def on_member_join(self, member):
+        log_channel = self.bot.get_channel(self.config_data['membership_channel'])
 
-        time_delta = datetime.datetime.utcnow() - member.created_at
+        is_discord_user_for = datetime.datetime.utcnow() - member.created_at
 
-        channel_object = self.bot.get_channel(self.config_data['membership_channel'])
-
-        if time_delta.days < 1:
-            embed=discord.Embed(title="New Member", description=f"{member.mention} [{member.name}] [New Discord User: {time_delta.seconds / 60} mins]", color=bot_utils.green)
+        if is_discord_user_for.days < 1:
+            embed=discord.Embed(title="New Member", description=f"{member.mention} [{member.name}] [New Discord User: {is_discord_user_for.seconds / 60} mins]", color=bot_utils.green)
         else:
             embed=discord.Embed(title="New Member", description=f"{member.mention} [{member.name}]", color=bot_utils.green)
 
-        await channel_object.send(embed=embed)
+        await log_channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        channel_object = self.bot.get_channel(self.config_data['membership_channel'])
+        log_channel = self.bot.get_channel(self.config_data['membership_channel'])
         
         embed=discord.Embed(title="Member Left", description=f"{member} : {member.mention}", color=bot_utils.red)
-        await channel_object.send(embed=embed)
+        await log_channel.send(embed=embed)
+
+    @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def ban_log(self, ctx):
+        '''
+        Shows all server bans.
+        '''
+        bans = await ctx.guild.bans()
+
+        # CREATE PAGINATOR
+        paginator = commands.Paginator(prefix='```\n', suffix='\n```')
+        paginator.add_line(f'--- BANS ({len(bans)}) ---')
+
+        # ADD COMMANDS TO PAGINATOR
+        for i in bans:
+            reason = str(i.reason).strip('\n')
+            paginator.add_line(f"{i.user.name} : {reason}")
+
+        # SEND PAGINATOR
+        for page in paginator.pages:
+            await ctx.send(page, delete_after=300)
 
     @commands.command(aliases=['membership'])
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -53,7 +71,6 @@ class User_Management(commands.Cog):
         '''
         Gets info on the server membership.
         '''
-
         async with ctx.typing():
 
             # GET MEMEBRS LIST
@@ -128,8 +145,10 @@ class User_Management(commands.Cog):
             ### --- USER CHANGE --- ###
 
             # GET ACTIVITY NUMBERS
-            self.c.execute("SELECT * FROM User_Activity")
-            user_activity = self.c.fetchall()
+            user_activity = self.bot.databasehandler.sqlquery(
+                "SELECT * FROM User_Activity",
+                return_type='all'
+            )
 
             # trimmed_data = user_activity[:1344]
             trimmed_data = user_activity[-2688:]
@@ -190,22 +209,24 @@ class User_Management(commands.Cog):
         '''
         Gets info on a user
         '''
-
-        # EMBED
+        INLINE = True
         embed = discord.Embed(title=f"User Info For {member}", color=bot_utils.green)
 
         # DISPLAY NAME
-        embed.add_field(name="Display Name", value=member.display_name, inline=False)
+        embed.add_field(name="Display Name", value=member.display_name, inline=INLINE)
+
+        # ID
+        embed.add_field(name="User ID", value=member.id, inline=INLINE)
 
         # JOIN DATE
-        days = str(datetime.datetime.utcnow() - member.created_at).split(" ")[0]
-        created_string = f"{member.created_at.strftime('%Y-%m-%d')} ({days} days)"
-        embed.add_field(name="Joined Discord on:", value=created_string, inline=False)
+        member_for_days = str(datetime.datetime.utcnow() - member.created_at).split(" ")[0]
+        created_string = f"{member.created_at.strftime('%Y-%m-%d')} ({member_for_days} days)"
+        embed.add_field(name="Joined Discord on:", value=created_string, inline=INLINE)
 
         # JOINED DISCORD
-        days = str(datetime.datetime.utcnow() - member.joined_at).split(" ")[0]
-        joined_string = f"{member.joined_at.strftime('%Y-%m-%d')} ({days} days)"
-        embed.add_field(name="Joined Server on:", value=joined_string, inline=False)
+        discord_user_for_days = str(datetime.datetime.utcnow() - member.joined_at).split(" ")[0]
+        joined_string = f"{member.joined_at.strftime('%Y-%m-%d')} ({discord_user_for_days} days)"
+        embed.add_field(name="Joined Server on:", value=joined_string, inline=INLINE)
 
         # NITRO SINCE
         if not member.premium_since is None:
@@ -213,71 +234,76 @@ class User_Management(commands.Cog):
             nitro_string = f"{member.premium_since.strftime('%Y-%m-%d')} ({nitro_days} days)"
         else:
             nitro_string = "Not Boosting"
-        embed.add_field(name="Nitro Since:", value=nitro_string, inline=False)
+        embed.add_field(name="Nitro Since:", value=nitro_string, inline=INLINE)
 
         # CURRENT STATUS
-        embed.add_field(name="Current Status:", value=member.status, inline=False)
+        embed.add_field(name="Current Status:", value=member.status, inline=INLINE)
 
         # CONNECTION STATUS
         is_mobile = member.is_on_mobile()
-        embed.add_field(name="On Mobile?", value=is_mobile, inline=False)
+        embed.add_field(name="On Mobile?", value=is_mobile, inline=INLINE)
+
+        # MEMBER STATUS
+        embed.add_field(name="Is Pending?", value=member.pending, inline=INLINE)
+
+        # WIKI
+        if self.bot.get_cog('Wiki'):
+            username = self.bot.get_cog('Wiki').get_username(member)
+            if username:
+                embed.add_field(name="Wiki", value=f"Wiki Username: `{username[0][1]}`", inline=INLINE)
+
+        # CommandsDB
+        if self.bot.get_cog('CommandsDB'):
+            commands = self.bot.get_cog('CommandsDB').get_user_commands(member)
+            embed.add_field(name="CommandsDB", value=f"Created `{len(commands)}` commands.", inline=INLINE)
 
         # SELF PROMOTION
         if self.bot.get_cog('SelfPromotion'):
             percentage = self.bot.get_cog('SelfPromotion').calc_percentage(member)
 
             search_date = datetime.datetime.utcnow() - datetime.timedelta(days=120)
-            self.c.execute("SELECT * FROM SelfPromotion WHERE user_id=? AND date > ?", (member.id, search_date))
-            messages = self.c.fetchall()
-
-            embed.add_field(name="Self Promotion", value=f"Self Promotion Percentage: `{percentage*100:.2f}`\nMessage Count Last 30 Days: `{len(messages)}`", inline=False)
-
-        # WIKI
-        if self.bot.get_cog('Wiki'):
-            username = self.bot.get_cog('Wiki').get_username(member)
-            if username:
-                embed.add_field(name="Wiki", value=f"Wiki Username: `{username[0][1]}`", inline=False)
-
-        # CommandsDB
-        if self.bot.get_cog('CommandsDB'):
-            commands = self.bot.get_cog('CommandsDB').get_user_commands(member)
-            embed.add_field(name="CommandsDB", value=f"Created `{len(commands)}` commands.", inline=False)
+            messages = self.bot.databasehandler.sqlquery(
+                "SELECT * FROM SelfPromotion WHERE user_id=? AND date > ?",
+                member.id, search_date,
+                return_type='all'
+            )
+            
+            embed.add_field(
+                name="Self Promotion",
+                value=f"Self Promotion Percentage: `{percentage*100:.2f}`\nMessage Count Last 30 Days: `{len(messages)}`",
+                inline=INLINE
+            )
 
         # ROLES
-        embed.add_field(name="Roles:", value=", ".join([i.name for i in member.roles]), inline=True)
+        embed.add_field(name="Roles:", value=", ".join([i.name for i in member.roles]), inline=False)
 
         await ctx.send(embed=embed)
 
     @user_info.error
     async def user_info_handler(self, ctx, error):
         """Local Error Handler for user_info."""
-
         if isinstance(error, commands.BadArgument):
             await ctx.send("Member not found.")
             ctx.handled_in_local = True
-
-        if isinstance(error, commands.BadArgument):
-            await ctx.send("Member not found.")
-            ctx.handled_in_local = True
-
 
     async def on_member_update(self, before, after):
         if before.premium_since is None and after.premium_since is not None:
             await bot_utils.log(self.bot, "Nitro Boost")
 
     @tasks.loop(minutes=15)
-    # @tasks.loop(seconds=5)
     async def user_activity_check(self):
 
         # AWAIT BOT TO BE READY
         await self.bot.wait_until_ready()
 
         members = self.bot.get_guild(self.config_data['guild_id']).members 
-
         online_members = len([member for member in members if member.status == discord.Status.online])
 
-        self.c.execute("INSERT INTO User_Activity(time_stamp, online, total_users) VALUES (?, ?, ?)", (datetime.datetime.utcnow(), online_members, len(members)))
-        self.conn.commit()
+        self.bot.databasehandler.sqlquery(
+            "INSERT INTO User_Activity(time_stamp, online, total_users) VALUES (?, ?, ?)",
+            datetime.datetime.utcnow(), online_members, len(members),
+            return_type='commit'
+        )
 
     async def cog_unload():
         self.user_activity_check.stop()
