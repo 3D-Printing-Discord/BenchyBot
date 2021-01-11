@@ -12,7 +12,6 @@ import json
 import database
 
 import TerminalLogger
-# import PrintInfo
 import logging
 
 logger = logging.getLogger('discord')
@@ -25,7 +24,6 @@ logger.addHandler(handler)
 print(f"[✓] {os.path.basename(sys.argv[0])} Started")
 
 TerminalLogger.start()
-# PrintInfo.start()
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~ LOAD CONFIG VARIABLES ~~~~~~~~~~~~~~~~~~~~~
