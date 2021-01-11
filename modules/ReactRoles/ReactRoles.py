@@ -10,15 +10,6 @@ class ReactRoles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        # GET CONFIG DATA
-        # self.config_data = []
-        # with open('modules/ReactRoles/config.json') as f:
-        #     self.config_data = json.load(f)
-
-        # BUILD DATABASE CONNECTION
-        self.conn = sqlite3.connect(self.bot.config['database'])
-        self.c = self.conn.cursor()
-
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, RawReactionActionEvent):
 
@@ -27,20 +18,21 @@ class ReactRoles(commands.Cog):
             return
         
         # GET USER BANNED LIST
-        self.c.execute("SELECT * FROM ReactRoles_Banned_Users WHERE user_id=?", (str(RawReactionActionEvent.member),))
-        banned_users = self.c.fetchall()
+        banned_users = self.bot.databasehandler.sqlquery(
+            "SELECT * FROM ReactRoles_Banned_Users",
+            return_type='all'
+        )
 
         # EXIT IF THE USER IS BLOCKED
-        if banned_users != []:
+        if str(RawReactionActionEvent.member) in banned_users:
             return
 
         # GET MESSAGE FROM DATABASE
-        self.c.execute("SELECT * FROM ReactRoles WHERE owning_message=? AND reaction=?", (RawReactionActionEvent.message_id, str(RawReactionActionEvent.emoji)))
-
-        # FETCH ALL RESULTS
-        role = self.c.fetchone()
-        self.c.close()
-        self.c = self.conn.cursor()
+        role = self.bot.databasehandler.sqlquery(
+            "SELECT * FROM ReactRoles WHERE owning_message=? AND reaction=?",
+            RawReactionActionEvent.message_id, str(RawReactionActionEvent.emoji),
+            return_type='one'
+        )
 
         # SEND COMMAND RESPONSE
         if role == None:
@@ -69,18 +61,22 @@ class ReactRoles(commands.Cog):
         target_member = guild.get_member(RawReactionActionEvent.user_id)
 
         # GET USER BANNED LIST
-        self.c.execute("SELECT * FROM ReactRoles_Banned_Users WHERE user_id=?", (str(target_member),))
-        banned_users = self.c.fetchall()
+        banned_users = self.bot.databasehandler.sqlquery(
+            "SELECT * FROM ReactRoles_Banned_Users WHERE user_id=?",
+            str(target_member),
+            return_type='all'
+        )
 
         # EXIT IF THE USER IS BLOCKED
         if banned_users != []:
             return
 
         # GET MESSAGE FROM DATABASE
-        self.c.execute("SELECT * FROM ReactRoles WHERE owning_message=? AND reaction=?", (RawReactionActionEvent.message_id, str(RawReactionActionEvent.emoji)))
-        role = self.c.fetchone()
-        self.c.close()
-        self.c = self.conn.cursor()
+        role = self.bot.databasehandler.sqlquery(
+            "SELECT * FROM ReactRoles WHERE owning_message=? AND reaction=?",
+            RawReactionActionEvent.message_id, str(RawReactionActionEvent.emoji),
+            return_type='one'
+        )
 
         # SEND COMMAND RESPONSE
         if role == None:
@@ -108,8 +104,11 @@ class ReactRoles(commands.Cog):
 
         member = str(member)
 
-        self.c.execute("INSERT INTO ReactRoles_Banned_Users(user_id) VALUES (?)", (member,))
-        self.conn.commit()
+        self.bot.databasehandler.sqlquery(
+            "INSERT INTO ReactRoles_Banned_Users(user_id) VALUES (?)",
+            member,
+            return_type='commit'
+        )
 
         await ctx.send(f"User '{member}' can no longer edit their roles.")
 
@@ -129,8 +128,11 @@ class ReactRoles(commands.Cog):
 
         member = str(member)
 
-        self.c.execute("DELETE FROM ReactRoles_Banned_Users WHERE user_id=?", (member,))
-        self.conn.commit()
+        self.bot.databasehandler.sqlquery(
+            "DELETE FROM ReactRoles_Banned_Users WHERE user_id=?",
+            member,
+            return_type='commit'
+        )
 
         await ctx.send(f"User '{member}' can now edit their roles again.")
 
@@ -194,8 +196,21 @@ class ReactRoles(commands.Cog):
 
         # ADD MESSAGE TO DATABASE
         for i, role in enumerate(roles):
-            self.c.execute("INSERT INTO ReactRoles(owning_message, role_id, reaction) VALUES (?, ?, ?)", (message.id, role, reacts[i]))
-            self.conn.commit()
+            self.bot.databasehandler.sqlquery(
+                "INSERT INTO ReactRoles(owning_message, role_id, reaction) VALUES (?, ?, ?)",
+                message.id, role, reacts[i],
+                return_type='commit'
+            )
+
+    async def condition_payload(self, payload):
+        payload.guild = self.bot.get_guild(payload.guild_id)
+        if not payload.guild:
+            payload.guild = self.bot.fetch_guild(payload.guild_id)
+
+        if payload.event_type == 'REACTION_REMOVE':
+            payload.member = payload.guild.get_member(payload.user_id)
+            if not payload.member:
+                payload.member = payload.guild.fetch_member(payload.user_id)
 
 def setup(bot):
     bot.add_cog(ReactRoles(bot))
