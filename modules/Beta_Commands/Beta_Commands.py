@@ -19,6 +19,7 @@ import html2markdown
 import datetime
 import asyncio
 from matplotlib import pyplot as plt
+from matplotlib import dates as mpl_dates
 import numpy as np
 import textstat
 import os
@@ -26,6 +27,16 @@ from PIL import Image, ExifTags
 import io
 import ffmpeg
 import sqlite3
+
+from discord_slash import cog_ext
+from discord_slash import SlashCommand
+from discord_slash import SlashContext
+from discord_slash.utils import manage_commands
+from discord_slash import SlashCommandOptionType
+import discord_slash
+
+
+guild_ids = [640522864214278155]
 
 # import cexprtk
 # import speedtest
@@ -45,6 +56,29 @@ for tz in pytz.all_timezones:
         key = tz.upper()
 
     timezone_lookup[key] = timezone(tz)
+
+printer_input = manage_commands.create_option(
+    name="printer",
+    description="The name of your printer(s)",
+    option_type=SlashCommandOptionType.STRING,
+    required=True
+)
+
+flag_input = manage_commands.create_option(
+    name="flag",
+    description="Pick a flag emoji for your country.",
+    option_type=SlashCommandOptionType.STRING,
+    required=False
+)
+
+role_option = manage_commands.create_option(
+    name="role",
+    description="A role.",
+    option_type=SlashCommandOptionType.ROLE,
+    required=True
+)
+
+guild_ids = [640522864214278155, 167661427862142976]
 
 # timezones = {
 #     "UTC": pytz.utc,
@@ -70,16 +104,38 @@ class Beta_Commands(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.yeets = 0
-        self.live = True
-        self.voted = []
 
         self.conn = sqlite3.connect(self.bot.config['database'])
         self.c = self.conn.cursor()
+
+        if not hasattr(bot, "slash"):
+            bot.slash = SlashCommand(
+                bot,
+                override_type=True,
+            )
+
+        self.bot.slash.get_cog_commands(self)
+        self.bot.loop.create_task(self.bot.slash.register_all_commands())
  
-        # self.config_data = []
-        # with open('modules/Beta_Commands/config.json') as f:
-        #     self.config_data = json.load(f)
+    def cog_unload(self):
+        self.bot.slash.remove_cog_commands(self)
+        self.bot.loop.create_task(self.bot.slash.delete_unused_commands())
+
+    @cog_ext.cog_slash(name="add_printer", description="Adds a printer to your name.", guild_ids=guild_ids, options=[printer_input, flag_input])
+    async def _add_printer(self, ctx: SlashContext, printer, flag):
+        print(f"{ctx.author.name}|{flag}|{printer}")
+
+        nick_string = f"{ctx.author.name}|{flag}|{printer}"
+        if len(nick_string) > 32:
+            embed=discord.Embed(title="Name String Too Long", description=f"The printer name you submitted was too long! Try a shorter name or an abbreviation.")
+            await ctx.send(embeds=[embed])
+        else:
+            try:
+                await ctx.author.edit(nick=nick_string)
+                embed = discord.Embed(title="Name Changed", description=f"{ctx.author.mention} your name has been changed successfully.")
+                await ctx.send(embeds=[embed])
+            except:
+                await ctx.send(content=f"Permission Denied.")
 
     # @commands.command()
     # @commands.has_any_role(*bot_utils.admin_roles)
@@ -137,17 +193,22 @@ class Beta_Commands(commands.Cog):
         )
         
         timestamp, demand = zip(*result)
-        timestamp = [i[5:16] for i in timestamp]
+        # timestamp = [i[5:16] for i in timestamp]
+        timestamp = [datetime.datetime.strptime(i, '%Y-%m-%d %H:%M:%S.%f') for i in timestamp]
+
+        date_format = mpl_dates.DateFormatter('%d-%m %H:%M')
+        plt.gca().xaxis.set_major_formatter(date_format) 
 
         # PLOT AND SET TITLES 
         plt.plot(timestamp, demand, color="black")
         plt.xlabel('Date')
         plt.ylabel('Channels in use')
-        plt.title('Help Channel Demand')
+        plt.title('Help Channel Demand (5 Days)')
         plt.yticks(np.arange(0, 10, step=1))
-        plt.xticks(rotation='vertical')
+
+        plt.gcf().autofmt_xdate()
         plt.grid(axis='y')
-        plt.tight_layout()
+        # plt.tight_layout()
 
         # SAVE IMAGE
         if os.path.isfile('runtimefiles/help_demand.png'):
@@ -301,8 +362,9 @@ class Beta_Commands(commands.Cog):
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def read(self, ctx, message="Test"):
-        await ctx.send(f"{Pessage}\n\n{textstat.flesch_reading_ease(message)}")
+    async def read(self, ctx):
+        reply_message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+        await ctx.send("Dun")
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -470,20 +532,6 @@ class Beta_Commands(commands.Cog):
     #     link_list = '\n'.join(f"<{i}>" for i in links)
     #     await ctx.send(f"Heres some christmas prints:\n{link_list}")
 
-    @commands.command()
-    @commands.check(bot_utils.is_bot_channel)
-    @commands.has_any_role(*bot_utils.admin_roles)
-    async def toggle_button(self, ctx):
-        if not ctx.author.id == 212995985901617154:
-            return
-
-        if self.live:
-            self.live = False
-            await ctx.send("Button is now off")
-        else:
-            self.live = True 
-            await ctx.send("Button is now on")
-
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -506,145 +554,10 @@ class Beta_Commands(commands.Cog):
     @commands.has_any_role(*bot_utils.admin_roles)
     async def test_embed(self, ctx):
         embed=discord.Embed(title=" TEST EMBED", description=f"This embed tests embedding an image")
-
         embed.set_image(url="https://knowpathology.com.au/app/uploads/2018/07/Happy-Test-Screen-01-825x510.png")
-
         await ctx.send(embed=embed)
 
-    @commands.command()
-    @commands.has_any_role(*bot_utils.admin_roles)
-    async def the_button(self, ctx):
-        '''
-        ALL PRAISE THE BUTTON
-        '''
 
-        if not ctx.author.id == 212995985901617154:
-            return
-
-        embed=discord.Embed(title="THE BUTTON", description=f"loading...\n")
-        message = await ctx.send(embed=embed)
-
-        leader_board = []
-
-        await asyncio.sleep(3)
-
-        await message.add_reaction('⚪')
-
-        while self.live:
-            leader_board = sorted(leader_board, key=lambda x: x[2], reverse=True)
-            leader_board.append(await self.the_button_manager(ctx,message,leader_board))
-
-        embed=discord.Embed(title="THE BUTTON", description=f"GAME OVER")
-        await message.edit(embed=embed)
-        await message.clear_reactions()
-        self.voted = []
-
-    def numbers_to_trophies(self, number):
-
-        number += 1
-
-        if number == 1:
-            return '🥇'
-        elif number == 2:
-            return '🥈'
-        elif number == 3:
-            return '🥉'
-        else:
-            return number
-
-    def rounds_from_colour(self, colour):
-
-        my_list = {
-            '⚪':15,
-            '🟢':31,
-            '🔵':81,
-            '🟣':273,
-            '🟠':1282,
-            '🟡':9177
-        }
-
-        return rounds[colour]
-
-    async def the_button_manager(self, ctx, message, leader_board):
-        if DEBUG: print("the_button_manager")
-        timeout_time = 30
-
-        # GENERATE LEADER BOARD
-        if DEBUG: print("generating board")
-
-        if len(leader_board) == 0:
-            no_players = "~ No High Scores ~"
-            joined_leader_board = f"```{no_players:^30}```"
-        else:
-            strings_leader_board = [f"{self.numbers_to_trophies(n)} {i[0]} {str(i[1]):<30} {str(i[2])} pts" for n, i in enumerate(leader_board)]
-            joined_leader_board = "```\n" + "\n".join(strings_leader_board) + "\n```"
-        print(joined_leader_board)
-
-        if DEBUG: print("resetting score")
-        score = 0
-
-        for k, v in buttons.items():
-            if DEBUG: print("Colour Update")
-            # await message.clear_reactions()
-            # await message.add_reaction(k)
-            for i in range(self.rounds_from_colour(k)):
-                if DEBUG: print("Score Update")
-                score += 10
-
-                if DEBUG: print("   - Updating Message")
-                embed=discord.Embed(title=f"{k} THE BUTTON {k}", description=f"Click the button...\nScore: `{score}` points!\n\nLeaderboard:\n{joined_leader_board}", color=v)
-                await message.edit(embed=embed)
-
-                if DEBUG: print("   - Setting check")
-                # DEF CHECK OF RESPONSE
-                def check(reaction, user):
-                    return str(reaction.emoji) in buttons and message.id == reaction.message.id and not (user in self.voted)
-
-
-                if DEBUG: print("   - Awaiting Check")
-                try:
-                    reaction, user = await ctx.bot.wait_for('reaction_add', timeout=timeout_time, check=check)
-                    if DEBUG: print("   - Press detected!")
-                    embed=discord.Embed(title=f"{k} THE BUTTON {k}", description=f"**WE HAVE A WINNER!**\n\n{user}\nScore: `{score}`\n\nLeaderboard:\n{joined_leader_board}", color=v)
-                    await message.edit(embed=embed)
-                    await asyncio.sleep(10)
-                    self.voted.append(user)
-                    return [k, user, score]
-
-                except asyncio.TimeoutError:
-                    if DEBUG: print("   - No press detected!")
-                    pass
-
-        if DEBUG: print("   - Setting check")
-        # DEF CHECK OF RESPONSE
-        def check(reaction, user):
-            return str(reaction.emoji) in buttons and message.id == reaction.message.id and not (user in self.voted)
-
-        reaction, user = await ctx.bot.wait_for('reaction_add', check=check)
-        if DEBUG: print("   - Press detected!")
-        embed=discord.Embed(title=f"{k} THE BUTTON {k}", description=f"**WE HAVE A WINNER!**\n\n{user}\nScore: {score}\n\nLeaderboard:\n{joined_leader_board}", color=v)
-        await message.edit(embed=embed)
-        await asyncio.sleep(10)
-        self.voted.append(user)
-        return [k, user, score]
-
-    @commands.command()
-    @commands.check(bot_utils.is_bot_channel)
-    @commands.has_any_role(*bot_utils.admin_roles)
-    async def get_cont(self, ctx, channel_id=None):
-
-        channel = ctx.guild.get_channel(int(channel_id))
-
-        await ctx.send(channel)
-
-        result = []
-        async for message in channel.history(limit=None):
-            result.append(f"### {message.created_at}\n{message.content}\n\n")
-
-        with open("runtimefiles/channel_contents.txt", 'w') as f:
-            f.writelines(result)
-
-        await ctx.send("Done")
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
@@ -773,30 +686,6 @@ class Beta_Commands(commands.Cog):
     @commands.has_any_role(*bot_utils.admin_roles)
     async def speed(self, ctx):
         servers = []
-        
-
-    @commands.command()
-    @commands.has_any_role(*bot_utils.admin_roles)
-    async def ban_log(self, ctx):
-        '''Shows all server bans.'''
-
-        if not ctx.channel.id == 339978089411117076:
-            return
-
-        bans = await ctx.guild.bans()
-
-        # CREATE PAGINATOR
-        paginator = commands.Paginator(prefix='```\n', suffix='\n```')
-        paginator.add_line(f'--- BANS ({len(bans)}) ---')
-
-        # ADD COMMANDS TO PAGINATOR
-        for i in bans:
-            reason = str(i.reason).strip('\n')
-            paginator.add_line(f"{i.user.name} : {reason}")
-
-        # SEND PAGINATOR
-        for page in paginator.pages:
-            await ctx.send(page, delete_after=300)
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
