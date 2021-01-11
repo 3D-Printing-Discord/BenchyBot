@@ -113,17 +113,20 @@ class Requests(commands.Cog):
 
     async def manage_response(self, payload):
         if not await self.check_offer(payload.member):
+            channel = self.bot.get_channel(payload.channel_id)
+            msg = await channel.fetch_message(payload.message_id)
+            await msg.remove_reaction('💵', payload.member)
+
             try:
                 embed = discord.Embed(
-                title="Service Request",
-                description=self.config_data['reject_post_message']
+                    title="Service Request",
+                    description=self.config_data['offer_reject_message']
                 )
-                await self.member.send(embed=embed)
-                DM = True
+                await payload.member.send(embed=embed)
+                DM = "True"
             except:
-                DM = False
-
-            await bot_utils.log(self.bot, title="Request Reponse Rejected", color=bot_utils.red, From=f"@{payload.user_id}", DM=DM)
+                DM = "False"
+            await bot_utils.log(self.bot, title="Request Reponse Rejected", color=bot_utils.red, From=f"<@{payload.user_id}> [{payload.user_id}]", DM=f"Sent: {DM}", Reason="-")
             return
 
         db_entry = self.bot.databasehandler.sqlquery(
@@ -171,8 +174,8 @@ class Requests(commands.Cog):
             channel = self.bot.get_channel(payload.channel_id)
             msg = await channel.fetch_message(payload.message_id)
 
-            if db_entry[1] == payload.user_id:
-                await msg.clear_reactions()
+            if db_entry[1] == payload.user_id or any([i in payload.member.roles for i in bot_utils.admin_roles]):
+                await msg.delete()
                 self.bot.databasehandler.sqlquery(
                     "DELETE FROM Requests WHERE message_id=?;",
                     payload.message_id,
@@ -181,6 +184,8 @@ class Requests(commands.Cog):
             else:
                 await msg.remove_reaction('❌', payload.member)
 
+    async def background_check(self):
+        pass
 
 def setup(bot):
     bot.add_cog(Requests(bot))
