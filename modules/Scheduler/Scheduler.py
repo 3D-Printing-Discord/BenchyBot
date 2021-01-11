@@ -19,10 +19,6 @@ class Scheduler(commands.Cog):
         with open('modules/Scheduler/config.json') as f:
             self.config_data = json.load(f)
 
-        # BUILD DATABASE CONNECTION
-        self.conn = sqlite3.connect(self.bot.config['database'])
-        self.c = self.conn.cursor()
-
         self.closed_embed = discord.Embed(title="Channel Closed", description=self.config_data['closed_message'], color=bot_utils.red)
         self.open_embed   = discord.Embed(title="Channel Open", description=self.config_data['open_message'], color=bot_utils.green)
 
@@ -36,11 +32,15 @@ class Scheduler(commands.Cog):
         '''
 
         try:
-            self.c.execute("INSERT INTO Scheduler(channel_id, days) VALUES (?, ?)", (channel_id, days))
-            self.conn.commit()
+            self.bot.databasehandler.sqlquery(
+                "INSERT INTO Scheduler(channel_id, days) VALUES (?, ?)",
+                channel_id, days,
+                return_type='commit'
+            )
             await ctx.send("Done!")
+
         except:
-            await ctx.send("Failed to remove schedule")
+            await ctx.send("Failed to add schedule")
 
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
@@ -50,8 +50,11 @@ class Scheduler(commands.Cog):
         '''
 
         try:
-            self.c.execute("DELETE FROM Scheduler WHERE channel_id=?", (channel_id,))
-            self.conn.commit()
+            self.bot.databasehandler.sqlquery(
+                "DELETE FROM Scheduler WHERE channel_id=?",
+                channel_id,
+                return_type='commit'
+            )
             await ctx.send("Done!")
         except:
             await ctx.send("Failed to remove schedule")
@@ -64,8 +67,10 @@ class Scheduler(commands.Cog):
         '''
 
         # GET Schedules COMMANDS
-        self.c.execute("SELECT * FROM Scheduler")
-        result = self.c.fetchall()
+        result = self.bot.databasehandler.sqlquery(
+            "SELECT * FROM Scheduler",
+            return_type='all'
+        )
 
         # CREATE PAGINATOR
         paginator = commands.Paginator(prefix='```\n', suffix='\n```')
@@ -87,8 +92,10 @@ class Scheduler(commands.Cog):
         # AWAIT BOT TO BE READY
         await self.bot.wait_until_ready()
 
-        self.c.execute("SELECT * FROM Scheduler")
-        schedules = self.c.fetchall()
+        schedules = self.bot.databasehandler.sqlquery(
+            "SELECT * FROM Scheduler",
+            return_type='all'
+        )
 
         for s in schedules:
             if DEBUG: print(s)
@@ -101,8 +108,11 @@ class Scheduler(commands.Cog):
                     if DEBUG: print("UPDATING STATE TO ON")
                     await channel_object.send(embed=self.open_embed)
                     await channel_object.set_permissions(channel_object.guild.default_role, read_messages=False, send_messages=True)
-                    self.c.execute("UPDATE Scheduler SET state = 'O' WHERE channel_id=?;", (s[0],))
-                    self.conn.commit()
+                    self.bot.databasehandler.sqlquery(
+                        "UPDATE Scheduler SET state = 'O' WHERE channel_id=?;",
+                        s[0],
+                        return_type='commit'
+                    )
                 else:
                     if DEBUG: print("NO UPDATE")
             else:
@@ -119,12 +129,13 @@ class Scheduler(commands.Cog):
 
                     await channel_object.send(embed=self.closed_embed)
                     await channel_object.set_permissions(channel_object.guild.default_role, read_messages=False, send_messages=False)
-                    self.c.execute("UPDATE Scheduler SET state = 'C' WHERE channel_id=?;", (s[0],))
-                    self.conn.commit()
+                    self.bot.databasehandler.sqlquery(
+                        "UPDATE Scheduler SET state = 'C' WHERE channel_id=?;",
+                        s[0],
+                        return_type='commit'
+                    )
                 else:
                     if DEBUG: print("NO UPDATE")
-
-            if DEBUG: print("-----------")
 
     def days_code_2_human(self, input_str):
         lookup_dict = {
