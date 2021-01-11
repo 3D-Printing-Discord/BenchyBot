@@ -202,16 +202,7 @@ class User_Management(commands.Cog):
             await ctx.send(file=loaded_file_4)
             await ctx.send(file=loaded_file_2)
 
-    @commands.command(aliases=['user'])
-    @commands.has_any_role(*bot_utils.admin_roles)
-    @commands.check(bot_utils.is_secret_channel)
-    async def user_info(self, ctx, member: discord.Member):
-        '''
-        Gets info on a user
-        '''
-        INLINE = True
-        embed = discord.Embed(title=f"User Info For {member}", color=bot_utils.green)
-
+    async def add_user_embed_fields(self, embed, member, INLINE = True):
         # DISPLAY NAME
         embed.add_field(name="Display Name", value=member.display_name, inline=INLINE)
 
@@ -276,6 +267,19 @@ class User_Management(commands.Cog):
 
         # ROLES
         embed.add_field(name="Roles:", value=", ".join([i.name for i in member.roles]), inline=False)
+
+        return embed
+
+    @commands.command(aliases=['user'])
+    @commands.has_any_role(*bot_utils.admin_roles)
+    @commands.check(bot_utils.is_secret_channel)
+    async def user_info(self, ctx, member: discord.Member):
+        '''
+        Gets info on a user
+        '''
+        embed = discord.Embed(title=f"User Info For {member}", color=bot_utils.green)
+
+        embed = await self.add_user_embed_fields(embed, member)
 
         await ctx.send(embed=embed)
 
