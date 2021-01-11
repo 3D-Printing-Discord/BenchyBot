@@ -4,6 +4,7 @@ from discord.ext import commands
 import json
 import bot_utils
 import datetime
+import re
 
 
 class Moderation(commands.Cog):
@@ -22,7 +23,7 @@ class Moderation(commands.Cog):
 
     @commands.command(aliases=['warn'])
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def rule(self, ctx, rule_number, member: discord.Member = None):
+    async def rule(self, ctx, rule_number, member: discord.Member = None, *, description=None):
         '''Shows a server rule or issues a warning.'''
 
         await ctx.message.delete()
@@ -39,17 +40,20 @@ class Moderation(commands.Cog):
 
             warn_mesg = await ctx.send(member.mention, embed=embed)
 
-            self.bot.databasehandler.sqlquery(
-                "INSERT INTO Moderation_warnings(timestamp, user_id, reason, jump_link) VALUES (?, ?, ?, ?)",
-                datetime.datetime.utcnow(), member.id, rule_number, warn_mesg.jump_url,
-                return_type='commit'
-            )
-
             log_embed = discord.Embed(title="Warning Issued", color=bot_utils.red)
             log_embed.set_footer(text=f"Issued by: {ctx.author}")
             log_embed.add_field(name="Issued to", value=f"{member} [{member.mention}]", inline=False)
-            log_embed.add_field(name="Reason", value=f"Rule {rule_number}", inline=False)
+            log_embed.add_field(name="Reason", value=f"Rule {rule_number}\nDescription: {description}", inline=False)
             log_embed.add_field(name="Link", value=f"[Jump link]({warn_mesg.jump_url})", inline=False)
+
+            if description is None:
+                description = warn_mesg.jump_url
+
+            self.bot.databasehandler.sqlquery(
+                "INSERT INTO Moderation_warnings(timestamp, user_id, reason, jump_link) VALUES (?, ?, ?, ?)",
+                datetime.datetime.utcnow(), member.id, rule_number, description,
+                return_type='commit'
+            )
 
             await ctx.guild.get_channel(self.bot.config['bot_log_channel']).send(embed=log_embed)
 
@@ -98,7 +102,14 @@ class Moderation(commands.Cog):
             warnings[i[2]] += 1
 
         out_string = "\n".join([f"Rule {k}: {v}" for k, v in warnings.items() if v != 0])
-        out_list_string = '\n'.join([f"[Rule: {i[2]}]({i[3]})" for i in results])
+        
+        out_list_string = []
+        for i in results:
+            if self.is_jumplink(i[3]):
+                out_list_string.append(f"[Rule: {i[2]}]({i[3]})")
+            else:
+                out_list_string.append(f"Rule: {i[2]} - {i[3]}")
+        out_list_string = '\n'.join(out_list_string)
 
         embed = discord.Embed(title=f"Infractions for {member.name}", color=bot_utils.red)
         if banned_string:
@@ -130,6 +141,9 @@ class Moderation(commands.Cog):
             await self.bot.get_guild(RawReactionActionEvent.guild_id).get_channel(self.bot.config['bot_log_channel']).send(embed=embed, files=[await i.to_file() for i in message.attachments])
             await message.delete()
 
+
+    def is_jumplink(self, link):
+        return bool(re.search('\/channels\/\d+\/\d+', link))
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
