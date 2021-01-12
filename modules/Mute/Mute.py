@@ -1,9 +1,10 @@
 
 import discord
-from discord.ext import commands
+from discord.ext import tasks, commands
 import json
 import asyncio
 import bot_utils
+import datetime
 
 class Mute(commands.Cog):
     version = "v0.1"
@@ -15,57 +16,98 @@ class Mute(commands.Cog):
         with open('modules/Mute/config.json') as f:
             self.config_data = json.load(f)
 
+        self.bg_unmute.start()
+
     @commands.command()
-    async def self_mute(self, ctx, time=None):
+    async def self_mute(self, ctx, time):
         '''Applies a mute to yourself for a set number of mins.'''
-        if time is None:
-            await ctx.send("You forgot to specify how long you want muting for!\nUsage: `?study_mute [time to mute in mins]`")
-            return
-        
+
         try:
             time=float(time)
         except:
-            await ctx.send("I didnt recognise that time!\nUsage: `?study_mute [time to mute in mins]`")
+            await ctx.send("I didnt recognise that time!\nUsage: `?mute_mute [time to mute in mins]`")
             return
 
         if not await bot_utils.await_confirm(ctx, f"Confirm that you ({ctx.author}) want muting for {time} mins?"):
             return
 
-        role_obj = ctx.guild.get_role(self.config_data['mute_role'])
-        await ctx.author.add_roles(role_obj)
-        embed = discord.Embed(title="Mute", description=f"{ctx.author} has been muted for {time} mins.", color=bot_utils.green)
-        await ctx.send(embed=embed)
-            
-        await asyncio.sleep(time * 60)
+        timestamp_end = datetime.datetime.utcnow() + datetime.timedelta(minutes=time)
 
-        await ctx.author.add_roles(role_obj)
-        await ctx.author.remove_roles(role_obj)
-        embed = discord.Embed(title="Mute", description=f"{ctx.author} has been unmuted.", color=bot_utils.green)
-        await ctx.send(embed=embed)
+        await self.mute_apply(ctx.author, timestamp_end)
+        await ctx.send(
+            embed=discord.Embed(
+                title="Mute",
+                description=f"{ctx.author} has been muted for {time} mins.\nExpires `{timestamp_end.strftime('%Y-%m-%d %H:%M')}`",
+                color=bot_utils.green
+            )
+        )
             
-
     @commands.command()
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def mute(self, ctx, member: discord.Member, time=None):
+    async def mute(self, ctx, member: discord.Member, time):
         '''Apply a mute to a member for a set number of mins.'''
 
         try:
             time = float(time)
         except:
-            await ctx.send("Error.\nUsage: `?mute [member] [time in mins]")
+            await ctx.send("```\nError\n- Please enter a valid time in mins.\n```")
+            return
             
+        timestamp_end = datetime.datetime.utcnow() + datetime.timedelta(minutes=time)
 
-        role_obj = ctx.guild.get_role(self.config_data['mute_role'])
+        await self.mute_apply(member, timestamp_end)
+        await ctx.send(
+            embed=discord.Embed(
+                title="Mute",
+                description=f"{member} has been muted for {time} mins.\nExpires `{timestamp_end.strftime('%Y-%m-%d %H:%M:%S')}`",
+                color=bot_utils.green,
+            )
+        )
+
+    async def mute_apply(self, member, timestamp_end):
+        role_obj = member.guild.get_role(self.config_data['mute_role'])
         await member.add_roles(role_obj)
-        embed = discord.Embed(title="Mute", description=f"{member} has been muted for {time} mins.", color=bot_utils.green)
-        await ctx.send(embed=embed)
 
-        await asyncio.sleep(time * 60)
+        self.bot.databasehandler.sqlquery(
+            "INSERT INTO Mute_current_mutes(userid, expires_at) VALUES (?, ?)",
+            member.id, timestamp_end,
+            return_type='commit'
+        )
 
+    async def mute_remove(self, member):
+        role_obj = member.guild.get_role(self.config_data['mute_role'])
         await member.add_roles(role_obj)
         await member.remove_roles(role_obj)
-        embed = discord.Embed(title="Mute", description=f"{member} has been unmuted.", color=bot_utils.green)
-        await ctx.send(embed=embed)
+
+        self.bot.databasehandler.sqlquery(
+            "DELETE FROM Mute_current_mutes WHERE userid=?",
+            member.id,
+            return_type='commit'
+        )
+
+    @tasks.loop(seconds=60)
+    async def bg_unmute(self):
+        expired_mutes = self.bot.databasehandler.sqlquery(
+            "SELECT * FROM Mute_current_mutes WHERE expires_at>?",
+            datetime.datetime.utcnow(),
+            return_type='all',
+        )
+
+        for i in expired_mutes:
+            guild = self.bot.get_guild(167661427862142976)
+            member = guild.get_member(i[0])
+
+            await self.mute_remove(member)
+
+    @bg_unmute.after_loop
+    async def post_bg_unmute(self):
+        if self.bg_unmute.failed():
+            import traceback
+            error = self.background_demand_log.get_task().exception()
+            traceback.print_exception(type(error), error, error.__traceback__)
+
+    async def cog_unload():
+        self.bg_unmute.stop()
 
 def setup(bot):
     bot.add_cog(Mute(bot))
