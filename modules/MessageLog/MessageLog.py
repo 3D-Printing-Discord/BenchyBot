@@ -46,7 +46,7 @@ class MessageLog(commands.Cog):
         if message.author == self.bot.user:
             return
 
-        await bot_utils.log(self.bot, title='Message Deleted', color=bot_utils.red, From=f"{message.author.mention} [{message.author}]", Message=message.content[:1000], channel=500395384720588810, DM=False)
+        await bot_utils.log(self.bot, title='Message Deleted', color=bot_utils.red, From=f"{message.author.mention} [{message.author}]", Message=f"> {message.content[:1000]}", channel=500395384720588810, DM=False)
 
 def setup(bot):
     bot.add_cog(MessageLog(bot))
