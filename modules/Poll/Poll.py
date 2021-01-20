@@ -43,7 +43,7 @@ class Poll(commands.Cog):
 
         self.messages[int(sent_message.id)] = topic
 
-        await sent_message.pin()
+        # await sent_message.pin()
 
         if DEBUG: print("Going to sleep")
         await asyncio.sleep(args['time']*60)
@@ -53,7 +53,7 @@ class Poll(commands.Cog):
 
         sent_message= await sent_message.channel.fetch_message(sent_message.id)
         await sent_message.edit(content=f"{sent_message.content}`CLOSED`")
-        await sent_message.unpin()
+        # await sent_message.unpin()
         await sent_message.clear_reactions()
 
     @commands.Cog.listener()
