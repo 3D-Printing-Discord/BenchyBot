@@ -63,10 +63,10 @@ class CommandsDB(commands.Cog):
         # SEND COMMAND
         await self.send_command(ctx, command[1], command=command)
 
-    @commands.command()
+    @commands.command(aliases=['hc'])
     @commands.check(bot_utils.is_bot_channel)
     @commands.has_any_role(*bot_utils.reg_roles)
-    async def hc(self, ctx, command=None, *, response=None):
+    async def command_help(self, ctx, command=None, *, response=None):
         '''
         Used to create / delete help commands.
 
@@ -84,10 +84,10 @@ class CommandsDB(commands.Cog):
         else:
             await self.add_command(ctx, 'help', command, response)
 
-    @commands.command()
+    @commands.command(aliases=['cc'])
     @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def cc(self, ctx, command=None, *, response=None):
+    async def command_custom(self, ctx, command=None, *, response=None):
         '''
         Used to create / delete custom commands.
         See ?hc help for more info.
@@ -101,10 +101,10 @@ class CommandsDB(commands.Cog):
         else:
             await self.add_command(ctx, 'fun', command, response)
 
-    @commands.command()
+    @commands.command(aliases=['alias'])
     @commands.check(bot_utils.is_bot_channel)
     @commands.has_any_role(*bot_utils.reg_roles)
-    async def alias(self, ctx, alias=None, command=None):
+    async def command_alias(self, ctx, alias=None, command=None):
         '''
         Used to manage command aliasing.
         '''
@@ -153,9 +153,9 @@ class CommandsDB(commands.Cog):
 
             await ctx.send(f"New alias: '{alias}' --> '{command}'")
 
-    @commands.command()
+    @commands.command(aliases=['help_db'])
     @commands.check(bot_utils.is_bot_channel)
-    async def help_db(self, ctx):
+    async def commands_show(self, ctx):
         '''
         Shows all databse commands.
         '''
@@ -164,7 +164,7 @@ class CommandsDB(commands.Cog):
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def db_csv(self, ctx):
+    async def commmands_csv(self, ctx):
         '''
         Exports a CSV of the commands database.
         '''
@@ -185,10 +185,10 @@ class CommandsDB(commands.Cog):
             loaded_file = discord.File("runtimefiles/Database-CSV.csv", filename="Database-CSV.csv")
             await ctx.send("CSV File of the commands Database.", file=loaded_file)
 
-    @commands.command()
+    @commands.command(aliases=['get_command'])
     @commands.check(bot_utils.is_bot_channel)
     @commands.has_any_role(*bot_utils.reg_roles)
-    async def get_command(self, ctx, command):
+    async def command_get(self, ctx, command):
         '''
         Gets the plain text version of a command from the database.
         '''
@@ -202,34 +202,6 @@ class CommandsDB(commands.Cog):
             await ctx.send("Sorry, didnt find that one!")
         else:
             await ctx.send(f"```\n{command[1]}\n```")
-
-    @commands.command()
-    @commands.check(bot_utils.is_bot_channel)
-    @commands.has_any_role(*bot_utils.admin_roles)
-    async def legacy_import(self, ctx):
-        '''
-        Imports legacy database data. Will overwrite all database entries.
-        '''
-
-        filename = 'runtimefiles/csv-import.csv'
-
-        await ctx.message.attachments[0].save(filename)
-
-        with open('runtimefiles/csv-import.csv', newline='\n') as csvfile:
-            csv_reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-            list_of_rows = list(csv_reader)
-
-        i = 0
-        for line in list_of_rows:
-            # ADD COMMAND TO THE DATABASE
-            self.bot.databasehandler.sqlquery(
-                "INSERT INTO Commands(command, response, command_type) VALUES (?, ?, ?)",
-                line[1], line[2], line[0],
-                return_type='commit'
-            )
-            i += 1
-
-        await ctx.send(f"Added {i} commands to the databse!")
 
     @commands.command()
     @commands.check(bot_utils.is_bot_channel)
@@ -252,26 +224,8 @@ class CommandsDB(commands.Cog):
         for page in paginator.pages:
             await ctx.send(page)
 
-    @commands_by.error
-    async def commands_by_handler(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            embed = discord.Embed(
-                title="You need to provide a users name.",
-                description="Use the command like this:\n`?commands_by [User Name]`\n\nExample\n`?commands_by Ed`\n\nYou can find users with either their ID, name or mention."
-            )
-            await ctx.send(embed=embed)
-            ctx.handled_in_local = True
-
-        if isinstance(error, commands.errors.BadArgument):
-            embed = discord.Embed(
-                title="Member Not Found",
-                description="Sorry, I didnt find that user.\nYou can find users with either their ID, name or mention. if their name includes a space you will have to use either the mention or ID."
-            )
-            await ctx.send(embed=embed)
-            ctx.handled_in_local = True
 
     # -- HELPER FUNCTIONS --
-
     def embed_type(self, input_string):
         if not input_string.startswith('<'):
             return 'PLAIN'
