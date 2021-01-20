@@ -7,6 +7,7 @@ c = conn.cursor()
 
 # Create table
 c.execute('''CREATE TABLE HelpChannels_demand (timestamp date, active_channels integer)''')
+c.execute('''CREATE TABLE HelpChannels_log (timestamp date, close_type text, owner integer)''')
 
 # Save (commit) the changes
 conn.commit()
