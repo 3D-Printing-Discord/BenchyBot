@@ -73,6 +73,7 @@ class Moderation(commands.Cog):
             ctx.handled_in_local = True
 
     @commands.command(aliases=['warns'])
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def show_infractions(self, ctx, *, member):
         '''
@@ -140,7 +141,6 @@ class Moderation(commands.Cog):
 
             await self.bot.get_guild(RawReactionActionEvent.guild_id).get_channel(self.bot.config['bot_log_channel']).send(embed=embed, files=[await i.to_file() for i in message.attachments])
             await message.delete()
-
 
     def is_jumplink(self, link):
         return bool(re.search('\/channels\/\d+\/\d+', link))
