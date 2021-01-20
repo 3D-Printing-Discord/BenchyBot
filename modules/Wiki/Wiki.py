@@ -74,6 +74,7 @@ class Wiki(commands.Cog):
         return result
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def wiki_gen_commands_page(self, ctx):
         '''Generates the bot commands page [Beta]'''
@@ -101,6 +102,7 @@ class Wiki(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def wiki_who(self, ctx, username=None):
         '''Displays discord users github names.'''
@@ -121,6 +123,7 @@ class Wiki(commands.Cog):
             await ctx.send(page, delete_after=60)
         
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def update_local_database(self, ctx):
         '''
