@@ -4,6 +4,7 @@ from discord.ext import commands
 import json
 import asyncio
 from  datetime import datetime, timedelta
+import bot_utils
 
 class Suggestions(commands.Cog):
     version = "v0.1"
@@ -16,9 +17,17 @@ class Suggestions(commands.Cog):
             self.config_data = json.load(f)
 
     async def suggestion_message(self, message):
+        await message.delete()
+        suggestion_message = await message.channel.send(
+            embed=discord.Embed(
+                title=f"Suggestion From: {message.author}",
+                description=message.clean_content,
+            )
+        )
+
         emojis = ['👍', '👎', '🤷‍♀️']
         for i in emojis:
-            await message.add_reaction(i)
+            await suggestion_message.add_reaction(i)
 
     async def count_reacts(self, message):
         r = {react.emoji: react.count for react in message.reactions}
@@ -99,13 +108,27 @@ class Suggestions(commands.Cog):
         embed.title = f'Regs Vote for: {user} CLOSED - {result_string}'
         await sent_message.edit(content=f"{message.author.mention}: Poll is complete.", embed=embed)
 
+    async def add_feedback(self, message):
+        await message.delete()
+
+        message_target = await message.channel.fetch_message(message.reference.message_id)
+        embed = message_target.embeds[0]
+
+        embed.add_field(name=f"Response / Feedback from {message.author.name}", value=message.clean_content, inline=False)
+        await message_target.edit(embed=embed)
+
     @commands.Cog.listener()
     async def on_message(self, message):
+
         if message.author.id == self.bot.user.id:
             return
 
         if message.channel.id in self.config_data['suggestions_channel']:
-            await self.suggestion_message(message)
+            if message.reference is not None and any(r.id in bot_utils.admin_roles for r in message.author.roles):
+                await self.add_feedback(message)
+            else: 
+                await self.suggestion_message(message)
+                
 
         if message.channel.id in self.config_data['timed_channels']:
             await message.delete()
