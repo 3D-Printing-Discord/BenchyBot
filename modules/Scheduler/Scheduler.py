@@ -25,6 +25,7 @@ class Scheduler(commands.Cog):
         self.channel_schedule.start()
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def add_schedule(self, ctx, channel_id, *, days):
         '''
@@ -43,6 +44,7 @@ class Scheduler(commands.Cog):
             await ctx.send("Failed to add schedule")
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def remove_schedule(self, ctx, channel_id):
         '''

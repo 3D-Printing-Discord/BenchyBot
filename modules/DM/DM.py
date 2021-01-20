@@ -124,6 +124,7 @@ class DM(commands.Cog):
         pass
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def dm(self, ctx, member: discord.Member, *, message):
         '''Use to send DMs through the bot.'''

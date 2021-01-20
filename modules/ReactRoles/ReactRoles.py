@@ -89,6 +89,7 @@ class ReactRoles(commands.Cog):
         await target_member.remove_roles(role)
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def block_roles(self, ctx, username):
         '''
@@ -113,6 +114,7 @@ class ReactRoles(commands.Cog):
         await ctx.send(f"User '{member}' can no longer edit their roles.")
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def unblock_roles(self, ctx, username):
         '''

@@ -18,9 +18,11 @@ class Mute(commands.Cog):
 
         self.bg_unmute.start()
 
-    @commands.command()
-    async def self_mute(self, ctx, time):
-        '''Applies a mute to yourself for a set number of mins.'''
+    @commands.command(aliases=['self_mute'])
+    async def mute_self(self, ctx, time):
+        '''
+        Applies a mute to yourself for a set number of mins.
+        '''
 
         try:
             time=float(time)
