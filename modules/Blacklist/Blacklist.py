@@ -23,7 +23,6 @@ class Blacklist(commands.Cog):
                 return
         except:
             pass
-            # print(f"ERROR USER: {message.author}")
 
         banned_terms = self.bot.databasehandler.sqlquery(
             "SELECT * FROM Blacklist",
@@ -45,8 +44,9 @@ class Blacklist(commands.Cog):
                 await bot_utils.log(self.bot, title="Blacklist Message Removed", color=bot_utils.red, From=f"{message.author.mention} [{message.author}]", Channel=message.channel.mention, Message=f"```{message.content[:1000]}```", DM=dm_status)
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def add_banned_term(self, ctx, term):
+    async def blacklist_add_term(self, ctx, term):
         """Adds blacklisted terms to the database"""
         term = term.lower()
 
@@ -61,8 +61,9 @@ class Blacklist(commands.Cog):
             await ctx.send(f"'{term}' failed to add to blacklist!")
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def remove_banned_term(self, ctx, term):
+    async def blacklist_remove_term(self, ctx, term):
         """Removes blacklisted terms from the database"""
         # Load blacklist terms
         try:
@@ -76,8 +77,9 @@ class Blacklist(commands.Cog):
             await ctx.send(f"'{term}' failed to remove from blacklist!")
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def view_banned_terms(self, ctx):
+    async def blacklist_view_terms(self, ctx):
         '''Shows the currently blacklisted terms.'''
         banned_terms = self.bot.databasehandler.sqlquery(
             "SELECT * FROM Blacklist",
