@@ -31,9 +31,13 @@ class ErrorHandler(commands.Cog):
             await ctx.send("A required argument was missing!\nView Command help with `?help <command name>")
             return
 
+        if isinstance(error, commands.errors.BadArgument):
+            await ctx.send("A command argument was invalid. Usually this means a member couldnt be found!\nView Command help with `?help <command name>")
+            return
+
         # FETCH ED
         await ctx.send(
-            "**Uh-oh!**\nSomething went wrong!\nDont worry! <@212995985901617154?> will fix it!"
+            "**Uh-oh!**\nSomething went wrong!\nDont worry! <@212995985901617154> will fix it!"
         )
 
         print(
@@ -67,14 +71,16 @@ class ErrorHandler(commands.Cog):
             await self.bot.get_channel(self.bot.config['bot_log_channel']).send(embed=embed)
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def error(self, ctx):
         '''Causes an error. (for debug use only)'''
         sldgkh
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def toggle_errors(self, ctx):
+    async def errors_toggle(self, ctx):
         '''
         Enable or disable logging of bot errors to the audit log.
         '''
