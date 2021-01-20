@@ -13,33 +13,42 @@ class Help_Channel:
     version = "v2.0"
 
     def __init__(self, bot, channel_number, config_data, channel_id):
-        if DEBUG: print(f"Initilising Help_Channel {channel_number}")
-
         self.bot = bot
         self.config_data = config_data
-
         self.channel_id = channel_id
-
         self.channel_number = channel_number
 
         self.state = "AVAILABLE"
-        # await self._to_avail()
         self.owner = None
         self.title_update_at = None
 
         # CREATE EMBEDS
-        self.available_embed = discord.Embed(title="Channel Available", description=self.config_data['available_message'], color=bot_utils.green)
-        self.closed_embed = discord.Embed(title="Channel Closed", description=self.config_data['closed_message'], color=bot_utils.red)
-        self.directMessage_embed = discord.Embed(title="Channel Allocated", description=self.config_data['direct_message'], color=bot_utils.green)
+        self.available_embed = discord.Embed(
+            title="Channel Available",
+            description=self.config_data['available_message'],
+            color=bot_utils.green
+        )
+        self.closed_embed = discord.Embed(
+            title="Channel Closed",
+            description=self.config_data['closed_message'],
+            color=bot_utils.red
+        )
+        self.directMessage_embed = discord.Embed(
+            title="Channel Allocated",
+            description=self.config_data['direct_message'],
+            color=bot_utils.green
+        )
 
     def __str__(self):
-        return f"Help Channel: {str(self.bot.get_channel(self.channel_id))}"
+        return f"Help Channel: {self.channel_number}"
 
     async def _to_close(self):
         '''
         Closed status entry method.
 
-        Sets the channel state to closed. No messages should can be sent. This state exists to work around the discord rate limitations on changing channel names.
+        Sets the channel state to closed. 
+        No messages should can be sent. 
+        This state exists to work around the discord rate limitations on changing channel names.
         '''
 
         previous_state = self.state
@@ -47,14 +56,10 @@ class Help_Channel:
 
         channel_object = self.get_channel()
 
-        if self.config_data['pin_messages'] == "True":
-            for p in await channel_object.pins(): 
-                await p.unpin()
+        for p in await channel_object.pins(): 
+            await p.unpin()
         
-        if DEBUG: print("Checking time since update")
-
-        time_since_updated = self.time_since_last_update()
-        if time_since_updated > 600:
+        if self.time_since_last_update() > 600:
             await self._to_avail()
             return
 
@@ -62,26 +67,23 @@ class Help_Channel:
         await channel_object.send(embed=self.closed_embed)
         await channel_object.set_permissions(channel_object.guild.default_role, send_messages=False)
 
-        # CLEAN UP PINS 
-        if self.config_data['pin_messages'] == "True":
-            pinned_messages = await channel_object.pins()
-            for pinned_message in pinned_messages: 
-                await pinned_message.unpin()
-
     async def _check_close(self):
         '''
         Checks the closed state is still required.
 
-        Channel should remain closed if <600 seconds has passed since the last name change. After 600 have passed _to_avail() should be called.
+        Channel should remain closed if <600 seconds has passed since the last name change.
+        After 600 have passed _to_avail() should be called.
         '''
-
         if self.time_since_last_update() > 600:
             await self._to_avail()
 
     async def _to_new(self, member, message=None):
         '''
-        Sets state to a new issue.
+        New issue status entry method.
+
+        Channel with no messages from other members.
         '''
+
         self.state = "NEW"
 
         if len(message.mentions) != 0:
@@ -119,21 +121,14 @@ class Help_Channel:
         await self.timeout_check()
 
     async def _to_avail(self):
-        if DEBUG: print("_to_avail running")
-
-        if DEBUG: print("Setting state:")
         self.state = "AVAILABLE"
-        if DEBUG: print(self.state)
 
         await self.title_update(emoji="✅", status="available")
         self.owner = None
 
         channel_object = self.get_channel()
 
-        # SET PERMS
         await channel_object.set_permissions(channel_object.guild.default_role, send_messages=True)
-
-        # SEND EMBED
         await channel_object.send(embed=self.available_embed)
 
     async def _check_avail(self):
@@ -149,8 +144,6 @@ class Help_Channel:
         await self.timeout_check()
     
     async def check(self):
-        if DEBUG: print(f" - Running check {self.state} on {self.channel_id}")
-
         checks = {
             "AVAILABLE": self._check_avail,
             "CLOSED": self._check_close,
@@ -158,10 +151,9 @@ class Help_Channel:
             "NEW": self._check_new
         }
 
-        if DEBUG: print("Awaiting check")
         await checks[self.state]()
-        if DEBUG: print("returned from check")
 
+    # ~~~ HELPERS ~~~
     async def get_time_since_last_message(self):
         channel_object = self.get_channel()
 
@@ -190,13 +182,13 @@ class Help_Channel:
         await self.bot.get_channel(self.channel_id).edit(name=new_name)
 
     async def timeout_check(self):
-        if DEBUG: print("Timeout Check")
         channel_inactive_for = await self.get_time_since_last_message()
-        if DEBUG: print(channel_inactive_for)
-        if DEBUG: print("   -", channel_inactive_for)
-        
         if channel_inactive_for > self.config_data['timeout']:
-            if DEBUG: print("Running _to_close")
+            self.bot.databasehandler.sqlquery(
+                "INSERT INTO HelpChannels_log(timestamp, close_type, owner) VALUES (?, ?, ?)",
+                datetime.datetime.utcnow(), 'timeout', help_channel.owner,
+                return_type='commit',
+            )
             await self._to_close()
 
     async def message_quality_check(self, message):
@@ -220,9 +212,6 @@ class Help_Channel:
         else:
             return 999
 
-    async def message_faq_check(self, message):
-        message_content = message.content.lower().split()
-
 
 class HelpChannels(commands.Cog):
     version = "v1.0.0"
@@ -243,7 +232,6 @@ class HelpChannels(commands.Cog):
         # START BACKGROUND TASKS
         if self.config_data['timeout'] != 0:
             self.background_ActivityCheck.start()
-
         self.background_demand_log.start()
 
     @commands.Cog.listener()
@@ -261,54 +249,60 @@ class HelpChannels(commands.Cog):
         if message.content[:1] == self.bot.config['prefix']:
             return
 
-        if DEBUG: print("--- RUNNING ON_MESSAGE LISTENER IN DYANMIC HELP ---")
-
-        help_channel =  self.help_channel_list[message.channel.id]
+        help_channel  = self.help_channel_list[message.channel.id]
         channel_state = help_channel.state
-        if DEBUG: print(help_channel, " ", channel_state)
 
         if channel_state == 'AVAILABLE':
             if any(message.author.name == x.owner for x in self.help_channel_list.values()):
                 await message.delete()
                 await message.author.send(self.config_data['multiple_message'])
                 return
-            if DEBUG: print("Available channel reveived a message.")
+
             await help_channel._to_new(message.author, message)
+
         elif channel_state == 'NEW':
             if DEBUG: print("New Channel received message.")
             await help_channel._to_active(message.author)
+
         else:
             if DEBUG: print("No action")
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def add_help_channel(self, index, chan_id):
+    async def help_add_channel(self, index, chan_id):
         '''NOT TESTED - Adds a channel to the help catagory at runtime.'''
         self.help_channel_list[index] = Help_Channel(self.bot, index, self.config_data, chan_id)
 
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def end_help(self, message):
-        '''Ends Dynamic Help and resets the help names.'''
+    async def help_end(self, message):
+        '''[BETA] Ends Dynamic Help and resets the help names.'''
         
-        while self.help_channel_list:
-            key, value = self.help_channel_list.popitem()
+        for key, value in self.help_channel_list:
             await value._to_avail()
-
-        # for i, c in self.help_channel_list.copy().items():
-        #     del self.help_channel_list[i]
-        #     await c._to_avail()
 
         self.bot.unload_extension(f"modules.HelpChannels.HelpChannels")
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def setup_help(self, ctx):
+    async def help_setup(self, ctx, channel=None):
         '''Makes all help channels available. (Admin-Only)'''
 
-        for channel in self.help_channel_list.values():
-            await channel._to_avail()
+        if channel=None:
+            for channel in self.help_channel_list.values():
+                await channel._to_avail()
+        else:
+            try:
+                channel = help_channel_list[int(channel)]
+            except:
+                await ctx.send("Failed to get channel. Please use channel ID.")
+                return
+
+        await channel._to_avail()
 
     @commands.command()
     async def solved(self, ctx):
@@ -321,27 +315,48 @@ class HelpChannels(commands.Cog):
         help_channel = self.help_channel_list[ctx.channel.id]
 
         if help_channel.owner == ctx.author.name or await bot_utils.is_reg(ctx):
+            self.bot.databasehandler.sqlquery(
+                "INSERT INTO HelpChannels_log(timestamp, close_type, owner) VALUES (?, ?, ?)",
+                datetime.datetime.utcnow(), 'solved', help_channel.owner,
+                return_type='commit',
+            )
             await help_channel._to_close()
         else:
             await ctx.send("You don't have permission to do that!")
             return
 
+    @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
+    @commands.has_any_role(*bot_utils.admin_roles)
+    async def help_perf(self, ctx):
+        '''Displays help channel solve rate.'''
+        logs = self.bot.databasehandler.sqlquery(
+            "SELECT * FROM HelpChannels_log",
+            return_type='all'
+        )
+
+        solved = len([i for i in logs if i[1]=='solved'])
+        unsolved = len([i for i in logs if i[1]!='solved'])
+        total = len(logs)
+        percentage = solved / total * 100
+
+        await ctx.send(
+            "**Help Stats**\n```\n"
+            f"           Solved: {solved}\n" +
+            f"         Unsolved: {unsolved}\n" +
+            f"            Total: {total}\n" +
+            f"Percentage Solved: {percentage:.2f}\n" +
+            "```"
+        )
+
     @tasks.loop(seconds=60)
     async def background_ActivityCheck(self):
-
-        if DEBUG: print(f" -- RUNNING ACTIVITY CHECK -- ")
-
         # AWAIT BOT TO BE READY
         await self.bot.wait_until_ready()
 
         # LOOP OVER ALL CHANNELS IN LIST
         for channel in self.help_channel_list.values():
-            if DEBUG: print(f"Channel: {channel}")
-            if DEBUG: print(channel.channel_number, channel.owner, channel.state)
-
             await channel.check()
-
-        if DEBUG: print("----------------------")
 
     @background_ActivityCheck.after_loop
     async def post_loop(self):
@@ -349,10 +364,23 @@ class HelpChannels(commands.Cog):
             import traceback
             error = self.background_ActivityCheck.get_task().exception()
             traceback.print_exception(type(error), error, error.__traceback__)
-            print(f"Channel ID: {self.channel_id}\nChannel Number: {self.channel_number}\nState: {self.state}\nOwner: {self.owner}\nTitle update at: {self.title_update_at}")
 
+            print('[!] Help BG task restarting.')
+            try:
+                self.background_ActivityCheck.start()
+                action = "Restart Successful"
+            except:
+                print("[!] Failed to restart help bg task")
+                action = "Restart Failed"
 
-    @tasks.loop(seconds=300)
+            await bot_utils.log(
+                self.bot,
+                title="Help Background Task Failed",
+                color=bot_utils.red,
+                Action=action
+            )
+
+    @tasks.loop(seconds=60)
     async def background_demand_log(self):
         actives = sum([v.state != 'AVAILABLE' for k, v in self.help_channel_list.items()])
         self.bot.databasehandler.sqlquery(
@@ -367,6 +395,7 @@ class HelpChannels(commands.Cog):
             import traceback
             error = self.background_demand_log.get_task().exception()
             traceback.print_exception(type(error), error, error.__traceback__)
+            self.background_demand_log.start()
 
     async def cog_unload():
         self.background_ActivityCheck.stop()
