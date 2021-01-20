@@ -186,7 +186,7 @@ class Help_Channel:
         if channel_inactive_for > self.config_data['timeout']:
             self.bot.databasehandler.sqlquery(
                 "INSERT INTO HelpChannels_log(timestamp, close_type, owner) VALUES (?, ?, ?)",
-                datetime.datetime.utcnow(), 'timeout', help_channel.owner,
+                datetime.datetime.utcnow(), 'timeout', self.owner,
                 return_type='commit',
             )
             await self._to_close()
@@ -292,7 +292,7 @@ class HelpChannels(commands.Cog):
     async def help_setup(self, ctx, channel=None):
         '''Makes all help channels available. (Admin-Only)'''
 
-        if channel=None:
+        if channel is None:
             for channel in self.help_channel_list.values():
                 await channel._to_avail()
         else:
