@@ -11,14 +11,10 @@ class Bot_Management(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        # GET CONFIG DATA
-        # self.config_data = []
-        # with open('modules/Bot_Management/config.json') as f:
-            # self.config_data = json.load(f)
-
-    @commands.command()
+    @commands.command(aliases=['info'])
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def info(self, ctx):
+    async def bot_info(self, ctx):
         '''
         Provides info on the bot status.
         '''
@@ -30,7 +26,7 @@ class Bot_Management(commands.Cog):
         embed.add_field(name="Discord.py Version", value=self.bot.version, inline=False)
 
         # DECLARE MODULES
-        embed.add_field(name=f"Loaded Modules ({len(self.bot.cogs)})", value="\n".join([f"{m} - {v.version}" for m, v in self.bot.cogs.items()]), inline=False)
+        embed.add_field(name=f"Loaded Modules ({len(self.bot.cogs)})", value="\n".join([f"{v.version} - {m}" for m, v in self.bot.cogs.items()]), inline=False)
 
         # UPTIME
         embed.add_field(name="Uptime", value=(datetime.datetime.utcnow()-self.bot.start_time), inline=False)
@@ -38,62 +34,64 @@ class Bot_Management(commands.Cog):
 
         await ctx.send('```To load modules use:   load_module [module name]\nTo unload modules use: unload_module [module name]\nTo reload modules use: reload_module [module name]\n```', embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=['ulm'])
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def unload_module(self, ctx, module):
+    async def module_unload(self, ctx, module):
         """Unloads modules from the bot."""
         if module == "Bot_Management":
-            await ctx.send("Cannot unload Bot_Management at runtime!")
-        else:
-            try:
-                self.bot.unload_extension(f"modules.{module}.{module}")
-                print(f"[!] {module} was unloaded")
-                await ctx.send(f"Command Received: {module} unloaded successfully.")
-            except:
-                await ctx.send(f"ERROR: Cannot unload {module}!")
+            await ctx.send("```\nERROR:\nCannot unload Bot_Management at runtime!\n```")
+            return
+        
+        try:
+            self.bot.unload_extension(f"modules.{module}.{module}")
+            print(f"[!] {module} was unloaded")
+            await ctx.send(f"```\nCommand Received:\n{module} unloaded successfully.\n```")
+        except:
+            await ctx.send(f"```\nERROR:\nCannot unload {module}!\n```")
 
-    @commands.command()
+    @commands.command(aliases=['lm'])
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def load_module(self, ctx, module):
+    async def module_load(self, ctx, module):
         """Loads modules to the bot."""
         if module == "Bot_Management":
-            await ctx.send("Cannot load Bot_Management at runtime!")
-        else:
-            try:
-                self.bot.load_extension(f"modules.{module}.{module}")
-                print(f"[!] {module} was loaded")
-                await ctx.send(f"Command Received: {module} loaded successfully.")
-            except:
-                await ctx.send(f"ERROR: Cannot load {module}!")
+            await ctx.send("```\nERROR:\nCannot load Bot_Management at runtime!\n```")
+            return
 
-    @commands.command()
+        try:
+            self.bot.load_extension(f"modules.{module}.{module}")
+            print(f"[!] {module} was loaded")
+            await ctx.send(f"```\nCommand Received:\n{module} loaded successfully.\n```")
+        except:
+            await ctx.send(f"```\nERROR:\nCannot load {module}!\n```")
+
+    @commands.command(aliases=['rlm'])
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def reload_module(self, ctx, module):
+    async def module_reload(self, ctx, module):
         """Reloads bot modules."""
         if module == "Bot_Management":
-            await ctx.send("Cannot reload Bot_Management at runtime!")
+            await ctx.send("```\nERROR:\nCannot reload Bot_Management at runtime!\n```")
         else:
             try:
                 self.bot.unload_extension(f"modules.{module}.{module}")
                 self.bot.load_extension(f"modules.{module}.{module}")
                 print(f"[!] {module} was reloaded")
-                await ctx.send(f"Command Received: {module} reloaded successfully.")
+                await ctx.send(f"```\nCommand Received:\n{module} reloaded successfully.\n```")
             except:
-                await ctx.send(f"ERROR: Cannot load {module}!")
+                await ctx.send(f"```\nERROR:\nCannot load {module}!\n```")
             
-    @commands.command()
+    @commands.command(aliases=['dlm'])
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def debug_load_module(self, ctx, module):
+    async def module_debug(self, ctx, module):
         """Loads modules with full console debug"""
-        print("Loading with debug")
+        print("~~ Loading with debug ~~")
         print(f"Input: {module}")
         if module == "Bot_Management":
-            await ctx.send("Cannot load Bot_Management at runtime!")
+            await ctx.send("```\nERROR:\nCannot load Bot_Management at runtime!\n```")
         else:
             print("Attempting to load")
             self.bot.load_extension(f"modules.{module}.{module}")
             print(f"[!] {module} was loaded")
-            await ctx.send(f"Command Received: {module} loaded successfully.")
+            await ctx.send(f"```\nCommand Received:\n{module} loaded successfully.\n```")
 
 def setup(bot):
     bot.add_cog(Bot_Management(bot))
