@@ -19,6 +19,7 @@ class Showcase(commands.Cog):
             self.config_data = json.load(f)
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def showcase_whitelist(self, ctx):
         '''View the whitelist of sites for the showcase module.'''
@@ -37,6 +38,7 @@ class Showcase(commands.Cog):
             await ctx.send(page, delete_after=60)
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def showcase_whitelist_add(self, ctx, term):
         '''Adds an entry to the showcase whitelist.'''
@@ -44,6 +46,7 @@ class Showcase(commands.Cog):
             self.bot.databasehandler.sqlquery('INSERT INTO showcase_whitelist(site) VALUES (?)', term, return_type='commit')
 
     @commands.command()
+    @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
     async def showcase_whitelist_remove(self, ctx, term):
         '''Removes an entry from the showcase whitelist.'''
