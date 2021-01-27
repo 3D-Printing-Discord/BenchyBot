@@ -58,14 +58,12 @@ class Showcase(commands.Cog):
         if message.channel.id in self.config_data['showcase_channels']:
 
             if any(role.id in bot_utils.admin_roles for role in message.author.roles):
+                await message.author.send("You just posted in a showcase channel! Did you mean to do that?")
                 return
 
             whitelist_items = self.bot.databasehandler.sqlquery('SELECT * FROM showcase_whitelist', return_type='all')
 
-            # print(whitelist_items)
-
             check = [True for i in whitelist_items if i[0] in message.content]
-            # print(check)
 
             if message.attachments or any(check):
                 await asyncio.sleep(30)
@@ -79,8 +77,7 @@ class Showcase(commands.Cog):
                     dm_status = "**Failed To Send**"
 
                 await message.delete()
-                await bot_utils.log(self.bot, title="Showcase Message Removed", color=bot_utils.red, From=f"{message.author.mention} [{message.author}]", Message=f"```{message.content[:1000]}```", DM=dm_status)
-                # await message.guild.get_channel(self.bot.config['bot_log_channel']).send(f"Showcase message from {message.author} removed.```{message.content}```")
+                await bot_utils.log(self.bot, title="Showcase Message Removed", color=bot_utils.red, Channel=message.channel.mention, From=f"{message.author.mention} [{message.author}]", Message=f"```{message.content[:1000]}```", DM=dm_status)
 
 def setup(bot):
     bot.add_cog(Showcase(bot))
