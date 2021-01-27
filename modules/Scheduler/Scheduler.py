@@ -156,7 +156,7 @@ class Scheduler(commands.Cog):
 
         return output
 
-    async def cog_unload():
+    def cog_unload():
         self.channel_schedule.stop()
 
 def setup(bot):
