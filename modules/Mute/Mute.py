@@ -72,7 +72,7 @@ class Mute(commands.Cog):
 
         self.bot.databasehandler.sqlquery(
             "INSERT INTO Mute_current_mutes(userid, expires_at) VALUES (?, ?)",
-            member.id, timestamp_end,
+            member.id, timestamp_end.timestamp(),
             return_type='commit'
         )
 
@@ -91,7 +91,7 @@ class Mute(commands.Cog):
     async def bg_unmute(self):
         expired_mutes = self.bot.databasehandler.sqlquery(
             "SELECT * FROM Mute_current_mutes WHERE expires_at>?",
-            datetime.datetime.utcnow(),
+            datetime.datetime.now().timestamp(),
             return_type='all',
         )
 
@@ -108,7 +108,7 @@ class Mute(commands.Cog):
             error = self.background_demand_log.get_task().exception()
             traceback.print_exception(type(error), error, error.__traceback__)
 
-    async def cog_unload():
+    def cog_unload():
         self.bg_unmute.stop()
 
 def setup(bot):
