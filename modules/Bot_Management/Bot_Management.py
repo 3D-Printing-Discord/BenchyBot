@@ -11,10 +11,10 @@ class Bot_Management(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=['info'])
+    @commands.command()
     @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def bot_info(self, ctx):
+    async def info(self, ctx):
         '''
         Provides info on the bot status.
         '''
