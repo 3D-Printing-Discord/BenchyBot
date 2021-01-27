@@ -309,7 +309,7 @@ class User_Management(commands.Cog):
             return_type='commit'
         )
 
-    async def cog_unload():
+    def cog_unload():
         self.user_activity_check.stop()
 
 def setup(bot):
