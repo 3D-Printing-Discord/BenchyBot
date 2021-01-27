@@ -157,7 +157,7 @@ class CommandsDB(commands.Cog):
     @commands.check(bot_utils.is_bot_channel)
     async def commands_show(self, ctx):
         '''
-        Shows all databse commands.
+        Shows all database commands.
         '''
         await self.show_commands(ctx, 'help')
 
