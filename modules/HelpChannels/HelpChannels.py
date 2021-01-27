@@ -187,7 +187,7 @@ class Help_Channel:
         channel_inactive_for = await self.get_time_since_last_message()
         if channel_inactive_for > self.config_data['timeout']:
             self.bot.databasehandler.sqlquery(
-                "INSERT INTO HelpChannels_log(timestamp, close_type, owner, timestamp_open) VALUES (?, ?, ?)",
+                "INSERT INTO HelpChannels_log(timestamp, close_type, owner, timestamp_open) VALUES (?, ?, ?, ?)",
                 datetime.datetime.utcnow(), 'timeout', self.owner, self.timestamp_open,
                 return_type='commit',
             )
@@ -291,19 +291,11 @@ class HelpChannels(commands.Cog):
     @commands.command()
     @commands.check(bot_utils.is_secret_channel)
     @commands.has_any_role(*bot_utils.admin_roles)
-    async def help_setup(self, ctx, channel=None):
+    async def help_setup(self, ctx):
         '''Makes all help channels available. (Admin-Only)'''
 
-        if channel is None:
-            for channel in self.help_channel_list.values():
-                await channel._to_avail()
-        else:
-            try:
-                channel = help_channel_list[int(channel)]
-            except:
-                await ctx.send("Failed to get channel. Please use channel ID.")
-                return
-
+        for channel in self.help_channel_list.values():
+            await channel._to_avail()
         await channel._to_avail()
 
     @commands.command()
@@ -318,7 +310,7 @@ class HelpChannels(commands.Cog):
 
         if help_channel.owner == ctx.author.name or await bot_utils.is_reg(ctx):
             self.bot.databasehandler.sqlquery(
-                "INSERT INTO HelpChannels_log(timestamp, close_type, owner, timestamp_open) VALUES (?, ?, ?)",
+                "INSERT INTO HelpChannels_log(timestamp, close_type, owner, timestamp_open) VALUES (?, ?, ?, ?)",
                 datetime.datetime.utcnow(), 'solved', help_channel.owner, help_channel.timestamp_open,
                 return_type='commit',
             )
@@ -342,12 +334,21 @@ class HelpChannels(commands.Cog):
         total = len(logs)
         percentage = solved / total * 100
 
+        solved_length = [
+            datetime.datetime.strptime(i[0], '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(i[3], '%Y-%m-%d %H:%M:%S.%f')
+            for i in logs
+            if i[1]=='solved' and i[0] is not None and i[3] is not None
+        ]
+
+        average_length = sum(solved_length, datetime.timedelta(0)) / len(solved_length)
+
         await ctx.send(
             "**Help Stats**\n```\n"
-            f"           Solved: {solved}\n" +
-            f"         Unsolved: {unsolved}\n" +
-            f"            Total: {total}\n" +
-            f"Percentage Solved: {percentage:.2f}\n" +
+            f"              Solved: {solved}\n" +
+            f"            Unsolved: {unsolved}\n" +
+            f"               Total: {total}\n" +
+            f"   Percentage Solved: % {percentage:.2f}\n" +
+            f"Average Solve Length: {average_length}\n" +
             "```"
         )
 
@@ -399,7 +400,7 @@ class HelpChannels(commands.Cog):
             traceback.print_exception(type(error), error, error.__traceback__)
             self.background_demand_log.start()
 
-    async def cog_unload():
+    def cog_unload():
         self.background_ActivityCheck.stop()
         self.background_demand_log.stop()
 
