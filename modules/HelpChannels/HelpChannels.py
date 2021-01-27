@@ -21,6 +21,7 @@ class Help_Channel:
         self.state = "AVAILABLE"
         self.owner = None
         self.title_update_at = None
+        self.timestamp_open = None
 
         # CREATE EMBEDS
         self.available_embed = discord.Embed(
@@ -109,6 +110,7 @@ class Help_Channel:
             target_user = message.author
 
         self.owner = str(target_user.name)
+        self.timestamp_open = datetime.datetime.utcnow()
 
         if message and self.config_data['pin_messages'] == "True":
             await message.pin()
@@ -185,8 +187,8 @@ class Help_Channel:
         channel_inactive_for = await self.get_time_since_last_message()
         if channel_inactive_for > self.config_data['timeout']:
             self.bot.databasehandler.sqlquery(
-                "INSERT INTO HelpChannels_log(timestamp, close_type, owner) VALUES (?, ?, ?)",
-                datetime.datetime.utcnow(), 'timeout', self.owner,
+                "INSERT INTO HelpChannels_log(timestamp, close_type, owner, timestamp_open) VALUES (?, ?, ?)",
+                datetime.datetime.utcnow(), 'timeout', self.owner, self.timestamp_open,
                 return_type='commit',
             )
             await self._to_close()
@@ -316,8 +318,8 @@ class HelpChannels(commands.Cog):
 
         if help_channel.owner == ctx.author.name or await bot_utils.is_reg(ctx):
             self.bot.databasehandler.sqlquery(
-                "INSERT INTO HelpChannels_log(timestamp, close_type, owner) VALUES (?, ?, ?)",
-                datetime.datetime.utcnow(), 'solved', help_channel.owner,
+                "INSERT INTO HelpChannels_log(timestamp, close_type, owner, timestamp_open) VALUES (?, ?, ?)",
+                datetime.datetime.utcnow(), 'solved', help_channel.owner, help_channel.timestamp_open,
                 return_type='commit',
             )
             await help_channel._to_close()
